@@ -19,7 +19,7 @@ with open(input_file_path, 'r', encoding='utf-8') as infile, open(output_file_pa
         # '지히'가 포함된 줄만 추출
         if '[지히]' in line:
             # 시간 및 다른 정보를 제외하고 메시지만 추출하여 저장
-            message_start = line.rfind(']') + 2  # 마지막 ']' 뒤의 문자열부터 메시지 시작
+            message_start = line.rfind(']') + 2  # 마지막 ']' 뒤의 문자열부터 메시지 시작.
             message = line[message_start:].strip()
             outfile.write(message + '\n')
 
