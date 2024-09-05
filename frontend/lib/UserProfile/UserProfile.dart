@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../UserProfile/UserProfile_edit.dart'; // UserProfileEditPage import
 import 'FinanceReport.dart'; // FinanceReportPage import
 
@@ -16,7 +17,29 @@ class _UserProfilePageState extends State<UserProfilePage> {
   String _phoneNumber = '123-456-7890';
   String _bankAccount = '1234-5678-9012';
 
-  void _updateProfile(Map<String, String> updatedProfile) {
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile(); // 프로필 정보 로드
+  }
+
+  // 프로필 정보 로컬 저장소에서 불러오기
+  void _loadProfile() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _name = prefs.getString('name') ?? _name;
+      _jobTitle = prefs.getString('jobTitle') ?? _jobTitle;
+      _email = prefs.getString('email') ?? _email;
+      _gender = prefs.getString('gender') ?? _gender;
+      _birthdate = prefs.getString('birthdate') ?? _birthdate;
+      _phoneNumber = prefs.getString('phoneNumber') ?? _phoneNumber;
+      _bankAccount = prefs.getString('bankAccount') ?? _bankAccount;
+    });
+  }
+
+  // 프로필 수정 후 로컬 저장소에 저장하는 함수
+  void _updateProfile(Map<String, String> updatedProfile) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _name = updatedProfile['name']!;
       _jobTitle = updatedProfile['jobTitle']!;
@@ -26,6 +49,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
       _phoneNumber = updatedProfile['phoneNumber']!;
       _bankAccount = updatedProfile['bankAccount']!;
     });
+    await prefs.setString('name', _name);
+    await prefs.setString('jobTitle', _jobTitle);
+    await prefs.setString('email', _email);
+    await prefs.setString('gender', _gender);
+    await prefs.setString('birthdate', _birthdate);
+    await prefs.setString('phoneNumber', _phoneNumber);
+    await prefs.setString('bankAccount', _bankAccount);
   }
 
   @override
