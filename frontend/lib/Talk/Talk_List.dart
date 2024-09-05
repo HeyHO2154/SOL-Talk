@@ -41,6 +41,26 @@ class _TalkListPageState extends State<TalkListPage> {
     await prefs.setString('chatRooms', updatedChatRoomsJson);
   }
 
+  // 마지막 메시지 업데이트 함수
+  void _updateLastMessage(String roomName, String lastMessage) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? chatRoomsJson = prefs.getString('chatRooms');
+    if (chatRoomsJson != null) {
+      List<dynamic> chatRoomsList = json.decode(chatRoomsJson);
+      int roomIndex = chatRoomsList.indexWhere((room) => room['name'] == roomName);
+
+      if (roomIndex != -1) {
+        chatRoomsList[roomIndex]['lastMessage'] = lastMessage;
+        String updatedChatRoomsJson = json.encode(chatRoomsList);
+        await prefs.setString('chatRooms', updatedChatRoomsJson);
+
+        setState(() {
+          _chatRooms[roomIndex]['lastMessage'] = lastMessage;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,7 +77,7 @@ class _TalkListPageState extends State<TalkListPage> {
               child: Text(chatRoom['name']![0]),
             ),
             title: Text(chatRoom['name']!),
-            subtitle: Text(chatRoom['lastMessage']!),
+            subtitle: Text(chatRoom['lastMessage']!), // 마지막 메시지를 미리보기로 표시
             trailing: IconButton(
               icon: Icon(Icons.delete, color: Colors.red),
               onPressed: () {
@@ -88,13 +108,18 @@ class _TalkListPageState extends State<TalkListPage> {
                 );
               },
             ),
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              // TalkRoomPage에서 메시지를 보내고 마지막 메시지를 업데이트
+              final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => TalkRoomPage(friendName: chatRoom['name']!),
                 ),
               );
+
+              if (result != null) {
+                _updateLastMessage(chatRoom['name']!, result); // 마지막 메시지 업데이트
+              }
             },
           );
         },

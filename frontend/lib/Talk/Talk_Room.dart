@@ -19,9 +19,11 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
     if (_messageController.text.isNotEmpty) {
       setState(() {
         _messages.add(_messageController.text);
+        String lastMessage = _messageController.text;
         _messageController.clear(); // 메시지 전송 후 입력창 비우기
+        _saveMessages();
+        Navigator.pop(context, lastMessage); // 마지막 메시지 반환
       });
-      _saveMessages();
     }
   }
 
