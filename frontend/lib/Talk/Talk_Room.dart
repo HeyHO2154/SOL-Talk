@@ -14,16 +14,30 @@ class TalkRoomPage extends StatefulWidget {
 class _TalkRoomPageState extends State<TalkRoomPage> {
   final TextEditingController _messageController = TextEditingController();
   final List<String> _messages = [];
+  final ScrollController _scrollController = ScrollController(); // 스크롤 컨트롤러 추가
 
+  // 메시지를 전송하는 함수
   void _sendMessage() {
     if (_messageController.text.isNotEmpty) {
       setState(() {
-        _messages.add(_messageController.text);
-        String lastMessage = _messageController.text;
+        String lastMessage = _messageController.text; // 마지막 메시지 저장
+        _messages.insert(0, lastMessage); // 메시지를 리스트의 맨 앞에 추가
         _messageController.clear(); // 메시지 전송 후 입력창 비우기
-        _saveMessages();
-        Navigator.pop(context, lastMessage); // 마지막 메시지 반환
+        _saveMessages(); // 로컬 저장소에 저장
+        _updateLastMessage(lastMessage); // TalkList에 마지막 메시지 업데이트
       });
+      _scrollToBottom(); // 메시지 전송 후 자동으로 아래로 스크롤
+    }
+  }
+
+  // 자동 스크롤 함수
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.minScrollExtent,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     }
   }
 
@@ -43,6 +57,23 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
       setState(() {
         _messages.addAll(messagesList.cast<String>());
       });
+      _scrollToBottom(); // 로드된 메시지가 있다면 스크롤을 최신 메시지로 이동
+    }
+  }
+
+  // 마지막 메시지를 TalkListPage에서 미리보기를 위해 SharedPreferences에 업데이트
+  void _updateLastMessage(String lastMessage) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? chatRoomsJson = prefs.getString('chatRooms');
+    if (chatRoomsJson != null) {
+      List<dynamic> chatRoomsList = json.decode(chatRoomsJson);
+      int roomIndex = chatRoomsList.indexWhere((room) => room['name'] == widget.friendName);
+
+      if (roomIndex != -1) {
+        chatRoomsList[roomIndex]['lastMessage'] = lastMessage;
+        String updatedChatRoomsJson = json.encode(chatRoomsList);
+        await prefs.setString('chatRooms', updatedChatRoomsJson);
+      }
     }
   }
 
@@ -62,8 +93,9 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
         children: [
           Expanded(
             child: ListView.builder(
-              reverse: true,
+              controller: _scrollController, // 스크롤 컨트롤러 연결
               itemCount: _messages.length,
+              reverse: true, // 아래에서 위로 쌓이도록 설정
               itemBuilder: (context, index) {
                 return ListTile(
                   title: Align(

@@ -8,13 +8,27 @@ class TalkListPage extends StatefulWidget {
   _TalkListPageState createState() => _TalkListPageState();
 }
 
-class _TalkListPageState extends State<TalkListPage> {
+class _TalkListPageState extends State<TalkListPage> with WidgetsBindingObserver {
   List<Map<String, String>> _chatRooms = [];
 
   @override
   void initState() {
     super.initState();
     _loadChatRooms();
+    WidgetsBinding.instance.addObserver(this); // 앱 상태 관찰자 추가
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this); // 앱 상태 관찰자 제거
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadChatRooms(); // 페이지가 다시 포커스를 받을 때 채팅방 목록을 새로고침
+    }
   }
 
   // 채팅방 목록을 로컬 저장소에서 불러오는 함수
