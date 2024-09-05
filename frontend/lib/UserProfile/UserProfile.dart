@@ -1,82 +1,126 @@
 import 'package:flutter/material.dart';
+import '../UserProfile/UserProfile_edit.dart'; // UserProfileEditPage import
+import 'FinanceReport.dart'; // FinanceReportPage import
 
-class UserProfilePage extends StatelessWidget {
+class UserProfilePage extends StatefulWidget {
+  @override
+  _UserProfilePageState createState() => _UserProfilePageState();
+}
+
+class _UserProfilePageState extends State<UserProfilePage> {
+  String _name = 'John Doe';
+  String _jobTitle = 'Flutter Developer';
+  String _email = 'johndoe@example.com';
+  String _gender = 'Male';
+  String _birthdate = '1990-01-01';
+  String _phoneNumber = '123-456-7890';
+  String _bankAccount = '1234-5678-9012';
+
+  void _updateProfile(Map<String, String> updatedProfile) {
+    setState(() {
+      _name = updatedProfile['name']!;
+      _jobTitle = updatedProfile['jobTitle']!;
+      _email = updatedProfile['email']!;
+      _gender = updatedProfile['gender']!;
+      _birthdate = updatedProfile['birthdate']!;
+      _phoneNumber = updatedProfile['phoneNumber']!;
+      _bankAccount = updatedProfile['bankAccount']!;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('User Profile'),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundImage: AssetImage('assets/profile_picture.png'), // 프로필 사진 경로 (로컬 이미지 사용)
-              ),
-              SizedBox(height: 16),
-              Text(
-                'John Doe',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundImage: AssetImage('assets/profile_picture.png'),
                 ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Flutter Developer',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey[600],
+                SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _name,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      _jobTitle,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(_email),
+                  ],
                 ),
-              ),
-              SizedBox(height: 24),
-              Divider(),
-              ListTile(
-                leading: Icon(Icons.cake),
-                title: Text('Birthdate'),
-                subtitle: Text('1990-01-01'),
-              ),
-              ListTile(
-                leading: Icon(Icons.person),
-                title: Text('Gender'),
-                subtitle: Text('Male'),
-              ),
-              ListTile(
-                leading: Icon(Icons.phone),
-                title: Text('Phone Number'),
-                subtitle: Text('+1 234 567 890'),
-              ),
-              ListTile(
-                leading: Icon(Icons.account_balance),
-                title: Text('Bank Account'),
-                subtitle: Text('1234-5678-9012'),
-              ),
-              Divider(),
-              ListTile(
-                leading: Icon(Icons.email),
-                title: Text('Email'),
-                subtitle: Text('johndoe@example.com'),
-              ),
-              ListTile(
-                leading: Icon(Icons.location_on),
-                title: Text('Address'),
-                subtitle: Text('1234, Flutter St, Code City'),
-              ),
-              Divider(),
-              SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {
-                  // 수정 버튼 클릭 시 동작 (예: 정보 수정 페이지로 이동)
-                },
-                child: Text('Edit Profile'),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+          Divider(),
+          ListTile(
+            title: Text('Gender'),
+            subtitle: Text(_gender),
+          ),
+          ListTile(
+            title: Text('Birthdate'),
+            subtitle: Text(_birthdate),
+          ),
+          ListTile(
+            title: Text('Phone Number'),
+            subtitle: Text(_phoneNumber),
+          ),
+          ListTile(
+            title: Text('Bank Account'),
+            subtitle: Text(_bankAccount),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final updatedProfile = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserProfileEditPage(
+                    name: _name,
+                    jobTitle: _jobTitle,
+                    email: _email,
+                    gender: _gender,
+                    birthdate: _birthdate,
+                    phoneNumber: _phoneNumber,
+                    bankAccount: _bankAccount,
+                  ),
+                ),
+              );
+              if (updatedProfile != null) {
+                _updateProfile(updatedProfile);
+              }
+            },
+            child: Text('Edit Profile'),
+          ),
+          SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              // 금융 분석 페이지로 이동
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FinanceReportPage()),
+              );
+            },
+            child: Text('Go to Finance Report'),
+          ),
+        ],
       ),
     );
   }

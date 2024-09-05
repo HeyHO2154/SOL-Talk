@@ -13,7 +13,7 @@ class TalkListPage extends StatelessWidget {
           ListTile(
             leading: CircleAvatar(
               radius: 25,
-              backgroundImage: AssetImage('assets/friend1.png'), // 상대방 프로필 사진
+              //backgroundImage: AssetImage('assets/friend1.png'), // 상대방 프로필 사진
             ),
             title: Text('Jane Smith'),
             subtitle: Text('Hey, are you free to talk?'),
