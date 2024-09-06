@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io'; // 파일 관련 작업을 위해 추가
 
 import '../Talk/Talk_List.dart';
 import '../Talk/Talk_Room.dart';
@@ -14,9 +16,10 @@ class FriendsListPage extends StatefulWidget {
 }
 
 class _FriendsListPageState extends State<FriendsListPage> {
-  List<Map<String, String>> _friends = [];
+  List<Map<String, String?>> _friends = []; // String?으로 변경하여 null 허용
   String _name = 'John Doe';
   String _jobTitle = 'Flutter Developer';
+  String? _profileImagePath; // 프로필 사진 경로
 
   @override
   void initState() {
@@ -33,7 +36,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
       List<dynamic> friendsList = json.decode(friendsJson);
       setState(() {
         _friends = friendsList
-            .map((friend) => Map<String, String>.from(friend as Map))
+            .map((friend) => Map<String, String?>.from(friend as Map)) // String? 타입으로 변환
             .toList();
       });
     }
@@ -45,6 +48,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
     setState(() {
       _name = prefs.getString('name') ?? _name;
       _jobTitle = prefs.getString('jobTitle') ?? _jobTitle;
+      _profileImagePath = prefs.getString('profileImagePath'); // 프로필 이미지 경로 불러오기
     });
   }
 
@@ -56,7 +60,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
   }
 
   // 새로운 친구를 추가하고 저장하는 함수
-  void _addFriend(Map<String, String> friend) {
+  void _addFriend(Map<String, String?> friend) {
     setState(() {
       _friends.add(friend); // 친구 목록에 새로운 친구 추가
     });
@@ -86,7 +90,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
     await prefs.remove('messages_$friendName'); // 저장된 메시지 삭제
   }
 
-// 채팅방 추가 함수 (TalkListPage에 채팅방 저장)
+  // 채팅방 추가 함수 (TalkListPage에 채팅방 저장)
   Future<void> _addChatRoom(String friendName) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? chatRoomsJson = prefs.getString('chatRooms');
@@ -98,6 +102,20 @@ class _FriendsListPageState extends State<FriendsListPage> {
       chatRoomsList.add({'name': friendName, 'lastMessage': 'Start chatting!'});
       String updatedChatRoomsJson = json.encode(chatRoomsList);
       await prefs.setString('chatRooms', updatedChatRoomsJson);
+    }
+  }
+
+  // 프로필 사진 선택 함수
+  Future<void> _pickProfileImage() async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _profileImagePath = image.path; // 선택된 이미지 경로 저장
+      });
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('profileImagePath', image.path); // 프로필 이미지 경로를 로컬 저장소에 저장
     }
   }
 
@@ -170,11 +188,8 @@ class _FriendsListPageState extends State<FriendsListPage> {
           // 본인 프로필
           InkWell(
             onTap: () {
-              // 본인 프로필 클릭 시 UserProfilePage로 이동
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => UserProfilePage()),
-              ).then((_) => _loadProfile()); // 프로필 수정 후 다시 로드
+              // 프로필 이미지 선택
+              _pickProfileImage();
             },
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -182,7 +197,8 @@ class _FriendsListPageState extends State<FriendsListPage> {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    child: Text(_name[0]),  // 본인 이름의 이니셜 표시
+                    backgroundImage: _profileImagePath != null ? FileImage(File(_profileImagePath!)) : null,
+                    child: _profileImagePath == null ? Text(_name[0]) : null, // 프로필 이미지가 없으면 이니셜 표시
                   ),
                   SizedBox(width: 16),
                   Column(
@@ -219,10 +235,14 @@ class _FriendsListPageState extends State<FriendsListPage> {
                 return ListTile(
                   leading: CircleAvatar(
                     radius: 25,
-                    child: Text(friend['name']![0]),  // 친구 이름의 첫 글자로 기본 프로필 표시
+                    backgroundImage: friend['profileImage'] != null
+                        ? FileImage(File(friend['profileImage']!))
+                        : null,
+                    child: friend['profileImage'] == null
+                        ? Text(friend['name']![0])
+                        : null, // 친구 이름의 첫 글자로 기본 프로필 표시
                   ),
                   title: Text(friend['name']!),
-                  subtitle: Text(friend['chatData']!),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart'; // 이미지 선택을 위한 패키지
 import 'package:permission_handler/permission_handler.dart'; // 권한 요청을 위해 추가
 import 'package:device_info_plus/device_info_plus.dart'; // 디바이스 정보 가져오기
 
@@ -14,6 +15,9 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
   String _name = '';
   String _chatData = '';
   String _filePath = ''; // 선택된 파일 경로
+  File? _profileImage; // 프로필 이미지 파일 저장 변수
+
+  final ImagePicker _picker = ImagePicker(); // 이미지 선택을 위한 객체
 
   // 외부 저장소 권한 요청 및 확인 함수
   Future<void> _checkAndRequestStoragePermission() async {
@@ -58,6 +62,17 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
       } else {
         _showPermissionDialog();
       }
+    }
+  }
+
+  // 프로필 이미지 선택 함수
+  Future<void> _pickProfileImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path); // 선택한 이미지 파일 저장
+      });
     }
   }
 
@@ -128,6 +143,7 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
       Navigator.pop(context, {
         'name': _name,
         'chatData': _chatData,
+        'profileImage': _profileImage?.path, // 프로필 이미지 경로 저장
       });
     }
   }
@@ -144,6 +160,19 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
           key: _formKey,
           child: Column(
             children: [
+              // 프로필 사진 추가
+              GestureDetector(
+                onTap: _pickProfileImage, // 프로필 이미지 선택
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundImage:
+                  _profileImage != null ? FileImage(_profileImage!) : null,
+                  child: _profileImage == null
+                      ? Icon(Icons.add_a_photo)
+                      : null, // 기본 프로필 이미지가 없으면 아이콘 표시
+                ),
+              ),
+              SizedBox(height: 16),
               // 친구 이름 입력
               TextFormField(
                 decoration: InputDecoration(labelText: 'Friend Name'),
