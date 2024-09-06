@@ -1,67 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsPage extends StatelessWidget {
+  // 모든 친구와 관련된 데이터를 삭제하는 함수
+  Future<void> _resetData(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // 친구 목록 삭제
+    await prefs.remove('friendsList');
+
+    // 채팅방 목록 삭제
+    await prefs.remove('chatRooms');
+
+    // 개별 대화 메시지 삭제 (모든 친구와 관련된 메시지 삭제)
+    Set<String> keys = prefs.getKeys();
+    for (String key in keys) {
+      if (key.startsWith('messages_')) {
+        await prefs.remove(key);
+      }
+    }
+
+    // 초기화 완료 메시지
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('모든 친구와 관련된 데이터가 삭제되었습니다.')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Settings'),
       ),
-      body: ListView(
-        children: [
-          ListTile(
-            leading: Icon(Icons.account_circle),
-            title: Text('Account Settings'),
-            subtitle: Text('Update your profile, password, etc.'),
-            onTap: () {
-              // 계정 설정 페이지로 이동
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.notifications),
-            title: Text('Notification Settings'),
-            subtitle: Text('Manage notification preferences'),
-            onTap: () {
-              // 알림 설정 페이지로 이동
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.lock),
-            title: Text('Privacy Settings'),
-            subtitle: Text('Adjust your privacy settings'),
-            onTap: () {
-              // 개인정보 설정 페이지로 이동
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.language),
-            title: Text('Language'),
-            subtitle: Text('Select language'),
-            onTap: () {
-              // 언어 설정 페이지로 이동
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.info),
-            title: Text('About App'),
-            subtitle: Text('Learn more about the app'),
-            onTap: () {
-              // 앱 정보 페이지로 이동
-            },
-          ),
-          Divider(),
-          ListTile(
-            leading: Icon(Icons.logout),
-            title: Text('Log Out'),
-            onTap: () {
-              // 로그아웃 처리 로직 추가
-            },
-          ),
-        ],
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            // 초기화 버튼 클릭 시 데이터 삭제
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text('초기화'),
+                  content: Text('모든 친구와 관련된 데이터를 삭제하시겠습니까?'),
+                  actions: [
+                    TextButton(
+                      child: Text('취소'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    TextButton(
+                      child: Text('삭제'),
+                      onPressed: () {
+                        _resetData(context); // 데이터 삭제 함수 호출
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+          child: Text('초기화 버튼'),
+        ),
       ),
     );
   }
