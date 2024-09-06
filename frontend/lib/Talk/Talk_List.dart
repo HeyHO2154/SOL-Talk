@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Talk_Room.dart';
-import 'dart:developer'; // 로그 출력을 위해 사용
+import 'dart:developer'; // 로그 출력을 위해 사용(디버그용)
 
 class TalkListPage extends StatefulWidget {
   @override
