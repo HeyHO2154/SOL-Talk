@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../Talk/Talk_List.dart';
 import '../Talk/Talk_Room.dart';
 import '../UserProfile/UserProfile.dart'; // UserProfilePage import
+import '../navigation.dart';
 import 'Friends_Add.dart';
 
 class FriendsListPage extends StatefulWidget {
@@ -102,21 +101,41 @@ class _FriendsListPageState extends State<FriendsListPage> {
     // 채팅방 목록에 추가
     _addChatRoom(friendName);
 
-    // 채팅방 페이지로 이동
-    await Navigator.push(
+    // TalkRoomPage에서 메시지를 보내고 마지막 메시지를 업데이트
+    final lastMessage = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => TalkRoomPage(friendName: friendName),
       ),
     );
 
-    // TalkListPage로 이동
-    Navigator.push(
+    // 마지막 메시지가 반환되면 채팅방 목록 업데이트
+    if (lastMessage != null) {
+      _updateLastMessage(friendName, lastMessage);
+    }
+
+    // TalkListPage로 돌아가기
+    Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (context) => TalkListPage(),
-      ),
+      MaterialPageRoute(builder: (context) => NavigationPage(initialIndex: 1)),
+          (Route<dynamic> route) => false,
     );
+  }
+
+  // 마지막 메시지 업데이트 함수
+  void _updateLastMessage(String roomName, String lastMessage) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? chatRoomsJson = prefs.getString('chatRooms');
+    if (chatRoomsJson != null) {
+      List<dynamic> chatRoomsList = json.decode(chatRoomsJson);
+      int roomIndex = chatRoomsList.indexWhere((room) => room['name'] == roomName);
+
+      if (roomIndex != -1) {
+        chatRoomsList[roomIndex]['lastMessage'] = lastMessage;
+        String updatedChatRoomsJson = json.encode(chatRoomsList);
+        await prefs.setString('chatRooms', updatedChatRoomsJson);
+      }
+    }
   }
 
   @override
