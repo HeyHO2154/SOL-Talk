@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Talk_Room.dart';
+import 'dart:developer'; // 로그 출력을 위해 사용
 
 class TalkListPage extends StatefulWidget {
   @override
@@ -21,13 +22,51 @@ class _TalkListPageState extends State<TalkListPage> {
   void _loadChatRooms() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? chatRoomsJson = prefs.getString('chatRooms');
+    log('불러온 채팅방 데이터: $chatRoomsJson'); // 불러온 데이터 로그 출력
+
     if (chatRoomsJson != null) {
       List<dynamic> chatRoomsList = json.decode(chatRoomsJson);
+      log('파싱된 채팅방 리스트: $chatRoomsList'); // 파싱된 리스트 출력
+
       setState(() {
         _chatRooms = chatRoomsList
             .map((chatRoom) => Map<String, String>.from(chatRoom as Map))
             .toList();
+        _sortChatRoomsByLastMessageTime(); // 최근 메시지 순으로 정렬
       });
+    } else {
+      log('채팅방 데이터가 없습니다.');
+    }
+  }
+
+  // 채팅방을 추가하는 함수
+  Future<void> _addChatRoom(String friendName) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? chatRoomsJson = prefs.getString('chatRooms');
+    List<dynamic> chatRoomsList = chatRoomsJson != null ? json.decode(chatRoomsJson) : [];
+
+    bool roomExists = chatRoomsList.any((room) => room['name'] == friendName);
+
+    // 새로운 채팅방 추가 시 현재 시간을 lastMessageTime으로 설정
+    if (!roomExists) {
+      chatRoomsList.add({
+        'name': friendName,
+        'lastMessage': 'Start chatting!',
+        'lastMessageTime': DateTime.now().toIso8601String(), // 방 생성 시 현재 시간 설정
+      });
+
+      String updatedChatRoomsJson = json.encode(chatRoomsList);
+      log('저장할 채팅방 데이터: $updatedChatRoomsJson'); // 저장 전 데이터 로그 출력
+      await prefs.setString('chatRooms', updatedChatRoomsJson);
+
+      setState(() {
+        _chatRooms = chatRoomsList
+            .map((chatRoom) => Map<String, String>.from(chatRoom as Map))
+            .toList();
+        _sortChatRoomsByLastMessageTime(); // 정렬
+      });
+    } else {
+      log('채팅방이 이미 존재합니다.');
     }
   }
 
@@ -37,7 +76,9 @@ class _TalkListPageState extends State<TalkListPage> {
     setState(() {
       _chatRooms.removeAt(index);
     });
+
     String updatedChatRoomsJson = json.encode(_chatRooms);
+    log('삭제 후 남은 채팅방 데이터: $updatedChatRoomsJson'); // 삭제 후 데이터 로그 출력
     await prefs.setString('chatRooms', updatedChatRoomsJson);
   }
 
@@ -51,14 +92,31 @@ class _TalkListPageState extends State<TalkListPage> {
 
       if (roomIndex != -1) {
         chatRoomsList[roomIndex]['lastMessage'] = lastMessage;
+        chatRoomsList[roomIndex]['lastMessageTime'] = DateTime.now().toIso8601String(); // 메시지 보낼 때 시간 업데이트
+
         String updatedChatRoomsJson = json.encode(chatRoomsList);
+        log('업데이트된 채팅방 데이터: $updatedChatRoomsJson'); // 업데이트 후 데이터 로그 출력
         await prefs.setString('chatRooms', updatedChatRoomsJson);
 
         setState(() {
-          _chatRooms[roomIndex]['lastMessage'] = lastMessage;
+          _chatRooms = chatRoomsList
+              .map((chatRoom) => Map<String, String>.from(chatRoom as Map))
+              .toList();
+          _sortChatRoomsByLastMessageTime();
         });
       }
     }
+  }
+
+  // 채팅방 목록을 마지막 메시지 시간 기준으로 정렬하는 함수
+  void _sortChatRoomsByLastMessageTime() {
+    setState(() {
+      _chatRooms.sort((a, b) {
+        DateTime timeA = DateTime.parse(a['lastMessageTime'] ?? DateTime.now().toIso8601String());
+        DateTime timeB = DateTime.parse(b['lastMessageTime'] ?? DateTime.now().toIso8601String());
+        return timeB.compareTo(timeA); // 최근 메시지가 먼저 오도록 정렬
+      });
+    });
   }
 
   @override
@@ -67,7 +125,9 @@ class _TalkListPageState extends State<TalkListPage> {
       appBar: AppBar(
         title: Text('Talk List'),
       ),
-      body: ListView.builder(
+      body: _chatRooms.isEmpty
+          ? Center(child: Text('No chat rooms available.'))
+          : ListView.builder(
         itemCount: _chatRooms.length,
         itemBuilder: (context, index) {
           final chatRoom = _chatRooms[index];
@@ -81,7 +141,6 @@ class _TalkListPageState extends State<TalkListPage> {
             trailing: IconButton(
               icon: Icon(Icons.delete, color: Colors.red),
               onPressed: () {
-                // 채팅방 삭제 확인 대화 상자 표시
                 showDialog(
                   context: context,
                   builder: (BuildContext context) {
@@ -98,7 +157,7 @@ class _TalkListPageState extends State<TalkListPage> {
                         TextButton(
                           child: Text('Delete'),
                           onPressed: () {
-                            _deleteChatRoom(index); // 채팅방 삭제
+                            _deleteChatRoom(index);
                             Navigator.of(context).pop();
                           },
                         ),

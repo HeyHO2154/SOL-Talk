@@ -86,8 +86,8 @@ class _FriendsListPageState extends State<FriendsListPage> {
     await prefs.remove('messages_$friendName'); // 저장된 메시지 삭제
   }
 
-  // 채팅방 추가 함수 (TalkListPage에 채팅방 저장)
-  void _addChatRoom(String friendName) async {
+// 채팅방 추가 함수 (TalkListPage에 채팅방 저장)
+  Future<void> _addChatRoom(String friendName) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? chatRoomsJson = prefs.getString('chatRooms');
     List<dynamic> chatRoomsList = chatRoomsJson != null ? json.decode(chatRoomsJson) : [];
@@ -102,7 +102,10 @@ class _FriendsListPageState extends State<FriendsListPage> {
   }
 
   // 친구 클릭 시 TalkRoomPage로 이동 및 채팅방 생성
-  void _openChatRoom(BuildContext context, String friendName) async {
+  Future<void> _openChatRoom(BuildContext context, String friendName) async {
+    // 채팅방 목록에 추가 (없을 경우 생성)
+    await _addChatRoom(friendName);
+
     // 채팅방 페이지로 이동
     final lastMessage = await Navigator.push(
       context,
