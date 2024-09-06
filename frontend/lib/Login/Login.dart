@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../navigation.dart';
+import 'Register.dart';
+import 'Account_Find.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -63,6 +65,34 @@ class _LoginPageState extends State<LoginPage> {
                 }
               },
               child: Text('Login'),
+            ),
+            SizedBox(height: 20),
+            // 회원가입 버튼
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RegisterPage()), // 회원가입 페이지로 이동
+                );
+              },
+              child: Text('Sign Up'),
+            ),
+            SizedBox(height: 20),
+            // ID/PW 찾기 텍스트
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AccountFindPage()), // 계정 찾기 페이지로 이동
+                );
+              },
+              child: Text(
+                'Forgot ID/Password?',
+                style: TextStyle(
+                  color: Colors.blue,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
             ),
           ],
         ),
