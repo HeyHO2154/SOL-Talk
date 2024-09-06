@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../Talk/Talk_List.dart';
 import '../Talk/Talk_Room.dart';
 import '../UserProfile/UserProfile.dart'; // UserProfilePage import
 import '../navigation.dart';
@@ -56,12 +58,12 @@ class _FriendsListPageState extends State<FriendsListPage> {
   // 새로운 친구를 추가하고 저장하는 함수
   void _addFriend(Map<String, String> friend) {
     setState(() {
-      _friends.add(friend);
+      _friends.add(friend); // 친구 목록에 새로운 친구 추가
     });
-    _saveFriends();  // 추가 후 저장
+    _saveFriends();  // 추가된 친구 목록 저장
   }
 
-  // 친구를 삭제하고 관련 채팅방도 삭제하는 함수
+  // 친구를 삭제하고 관련 채팅방, 메시지 데이터를 삭제하는 함수
   void _deleteFriendAndChatRoom(String friendName, int index) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -79,6 +81,9 @@ class _FriendsListPageState extends State<FriendsListPage> {
       String updatedChatRoomsJson = json.encode(chatRoomsList);
       await prefs.setString('chatRooms', updatedChatRoomsJson);
     }
+
+    // 관련 메시지 데이터 삭제
+    await prefs.remove('messages_$friendName'); // 저장된 메시지 삭제
   }
 
   // 채팅방 추가 함수 (TalkListPage에 채팅방 저장)
@@ -98,10 +103,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
 
   // 친구 클릭 시 TalkRoomPage로 이동 및 채팅방 생성
   void _openChatRoom(BuildContext context, String friendName) async {
-    // 채팅방 목록에 추가
-    _addChatRoom(friendName);
-
-    // TalkRoomPage에서 메시지를 보내고 마지막 메시지를 업데이트
+    // 채팅방 페이지로 이동
     final lastMessage = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -109,26 +111,25 @@ class _FriendsListPageState extends State<FriendsListPage> {
       ),
     );
 
-    // 마지막 메시지가 반환되면 채팅방 목록 업데이트
     if (lastMessage != null) {
-      _updateLastMessage(friendName, lastMessage);
+      _updateLastMessage(friendName, lastMessage); // 마지막 메시지 업데이트
     }
 
-    // TalkListPage로 돌아가기
-    Navigator.pushAndRemoveUntil(
+    // TalkListPage로 네비게이션 바를 가진 상태로 이동
+    Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => NavigationPage(initialIndex: 1)),
-          (Route<dynamic> route) => false,
+      MaterialPageRoute(
+        builder: (context) => NavigationPage(initialIndex: 1), // 채팅방 목록 탭으로 이동
+      ),
     );
   }
 
-  // 마지막 메시지 업데이트 함수
-  void _updateLastMessage(String roomName, String lastMessage) async {
+  void _updateLastMessage(String friendName, String lastMessage) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? chatRoomsJson = prefs.getString('chatRooms');
     if (chatRoomsJson != null) {
       List<dynamic> chatRoomsList = json.decode(chatRoomsJson);
-      int roomIndex = chatRoomsList.indexWhere((room) => room['name'] == roomName);
+      int roomIndex = chatRoomsList.indexWhere((room) => room['name'] == friendName);
 
       if (roomIndex != -1) {
         chatRoomsList[roomIndex]['lastMessage'] = lastMessage;
@@ -238,7 +239,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
                             builder: (BuildContext context) {
                               return AlertDialog(
                                 title: Text('Delete Friend'),
-                                content: Text('Are you sure you want to delete this friend and related chat room?'),
+                                content: Text('Are you sure you want to delete this friend and related chat room and data?'),
                                 actions: [
                                   TextButton(
                                     child: Text('Cancel'),
@@ -249,7 +250,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
                                   TextButton(
                                     child: Text('Delete'),
                                     onPressed: () {
-                                      _deleteFriendAndChatRoom(friend['name']!, index); // 친구 및 채팅방 삭제
+                                      _deleteFriendAndChatRoom(friend['name']!, index); // 친구 및 모든 관련 데이터 삭제
                                       Navigator.of(context).pop();
                                     },
                                   ),
