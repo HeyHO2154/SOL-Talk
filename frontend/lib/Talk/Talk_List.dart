@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Talk_Room.dart';
@@ -40,7 +41,7 @@ class _TalkListPageState extends State<TalkListPage> {
   }
 
   // 채팅방을 추가하는 함수
-  Future<void> _addChatRoom(String friendName) async {
+  Future<void> _addChatRoom(String friendName, String? profileImagePath) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? chatRoomsJson = prefs.getString('chatRooms');
     List<dynamic> chatRoomsList = chatRoomsJson != null ? json.decode(chatRoomsJson) : [];
@@ -53,6 +54,7 @@ class _TalkListPageState extends State<TalkListPage> {
         'name': friendName,
         'lastMessage': 'Start chatting!',
         'lastMessageTime': DateTime.now().toIso8601String(), // 방 생성 시 현재 시간 설정
+        'profileImage': profileImagePath, // 프로필 이미지 경로 저장
       });
 
       String updatedChatRoomsJson = json.encode(chatRoomsList);
@@ -131,10 +133,17 @@ class _TalkListPageState extends State<TalkListPage> {
         itemCount: _chatRooms.length,
         itemBuilder: (context, index) {
           final chatRoom = _chatRooms[index];
+          String? profileImagePath = chatRoom['profileImage'];
+
           return ListTile(
             leading: CircleAvatar(
               radius: 25,
-              child: Text(chatRoom['name']![0]),
+              backgroundImage: profileImagePath != null
+                  ? FileImage(File(profileImagePath))
+                  : null,
+              child: profileImagePath == null
+                  ? Text(chatRoom['name']![0]) // 프로필 이미지가 없을 때 이니셜 표시
+                  : null,
             ),
             title: Text(chatRoom['name']!),
             subtitle: Text(chatRoom['lastMessage']!), // 마지막 메시지를 미리보기로 표시
