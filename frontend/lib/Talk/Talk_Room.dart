@@ -27,6 +27,7 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
         _messageController.clear(); // 메시지 전송 후 입력창 비우기
       });
       _saveMessages();
+      _updateChatRoomLastMessageTime(); // 채팅방의 마지막 메시지 시간 업데이트
     }
   }
 
@@ -42,6 +43,24 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String messagesJson = json.encode(_messages);
     await prefs.setString('messages_${widget.friendName}', messagesJson);
+  }
+
+  // 마지막 메시지와 시간 업데이트
+  void _updateChatRoomLastMessageTime() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? chatRoomsJson = prefs.getString('chatRooms');
+    if (chatRoomsJson != null) {
+      List<dynamic> chatRoomsList = json.decode(chatRoomsJson);
+      int roomIndex = chatRoomsList.indexWhere((room) => room['name'] == widget.friendName);
+
+      if (roomIndex != -1) {
+        chatRoomsList[roomIndex]['lastMessage'] = _lastMessage;
+        chatRoomsList[roomIndex]['lastMessageTime'] = DateTime.now().toIso8601String();
+
+        String updatedChatRoomsJson = json.encode(chatRoomsList);
+        await prefs.setString('chatRooms', updatedChatRoomsJson);
+      }
+    }
   }
 
   void _loadMessages() async {
