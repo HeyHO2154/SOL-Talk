@@ -9,6 +9,17 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _verificationCodeController = TextEditingController();
+  bool _isVerificationSent = false;
+
+  void _sendVerificationCode() {
+    setState(() {
+      _isVerificationSent = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Verification code sent to ${_emailController.text}')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,15 +37,40 @@ class _RegisterPageState extends State<RegisterPage> {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: _sendVerificationCode,
+                  child: Text('Send Code'),
+                ),
+              ],
             ),
             SizedBox(height: 20),
+            if (_isVerificationSent)
+              Column(
+                children: [
+                  TextField(
+                    controller: _verificationCodeController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Verification Code',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                ],
+              ),
             TextField(
               controller: _passwordController,
               obscureText: true,
