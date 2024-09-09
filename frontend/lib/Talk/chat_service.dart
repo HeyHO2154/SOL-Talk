@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert'; // JSON 변환을 위해 추가
 
@@ -23,17 +22,14 @@ class ChatService {
       // 친구 이름이 포함된 메시지만 필터링
       for (String line in chatLines) {
         print('현재 처리중인 줄: $line');
-        if (line.contains('[$friendName]')) {
-          // 메시지 내용만 추출 (예시: [지히] [오후 10:39] 보이스톡 해요 -> 보이스톡 해요)
-          final messageMatch = RegExp(r'\[\w+\]\s+\[\w+\s+\d{1,2}:\d{2}\]\s+(.*)').firstMatch(line);
+        // friendName 뒤에 ': '가 포함된 줄을 필터링하여 메시지 추출
+        if (line.contains('$friendName :')) {
+          // ':' 뒤의 메시지 부분만 추출
+          String message = line.split(':').last.trim();
+          extractedMessages.add(message);
 
-          if (messageMatch != null && messageMatch.group(1) != null) {
-            String message = messageMatch.group(1)!.trim(); // 메시지 내용만 추출
-            extractedMessages.add(message);
-
-            // 디버깅: 추출된 메시지 로그 출력
-            print('추출된 메시지: $message');
-          }
+          // 디버깅: 추출된 메시지 로그 출력
+          print('추출된 메시지: $message');
         }
       }
     } catch (e) {
@@ -45,7 +41,6 @@ class ChatService {
 
     return extractedMessages;
   }
-
 
   // 추출한 메시지를 로컬 저장소에 저장하는 함수
   Future<void> saveExtractedMessages(String friendId, List<String> messages) async {
