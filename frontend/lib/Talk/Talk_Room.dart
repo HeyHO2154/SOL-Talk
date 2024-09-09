@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class TalkRoomPage extends StatefulWidget {
   final String friendName;
 
-  TalkRoomPage({required this.friendName});
+  TalkRoomPage({required this.friendName, String? profileImagePath});
 
   @override
   _TalkRoomPageState createState() => _TalkRoomPageState();

@@ -101,30 +101,36 @@ class _FriendsListPageState extends State<FriendsListPage> {
   }
 
   // 채팅방 추가 함수 (TalkListPage에 채팅방 저장)
-  Future<void> _addChatRoom(String friendName) async {
+  Future<void> _addChatRoom(String friendName, String? profileImagePath) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? chatRoomsJson = prefs.getString('chatRooms');
     List<dynamic> chatRoomsList = chatRoomsJson != null ? json.decode(chatRoomsJson) : [];
     bool roomExists = chatRoomsList.any((room) => room['name'] == friendName);
 
-    // 채팅방이 없을 경우 추가
+    // 채팅방이 없을 경우 추가, 프로필 이미지 경로도 함께 저장
     if (!roomExists) {
-      chatRoomsList.add({'name': friendName, 'lastMessage': 'Start chatting!'});
+      chatRoomsList.add({
+        'name': friendName,
+        'lastMessage': 'Start chatting!',
+        'profileImage': profileImagePath, // 프로필 이미지 경로 추가
+        'lastMessageTime': DateTime.now().toIso8601String() // 채팅방 생성 시간 추가
+      });
       String updatedChatRoomsJson = json.encode(chatRoomsList);
       await prefs.setString('chatRooms', updatedChatRoomsJson);
     }
   }
 
-  // 친구 클릭 시 TalkRoomPage로 이동 및 채팅방 생성
-  Future<void> _openChatRoom(BuildContext context, String friendName) async {
-    // 채팅방 목록에 추가 (없을 경우 생성)
-    await _addChatRoom(friendName);
 
-    // 채팅방 페이지로 이동
+  // 친구 클릭 시 TalkRoomPage로 이동 및 채팅방 생성
+  Future<void> _openChatRoom(BuildContext context, String friendName, String? profileImagePath) async {
+    // 채팅방 목록에 추가 (없을 경우 생성), 프로필 이미지 경로도 전달
+    await _addChatRoom(friendName, profileImagePath);
+
+    // 채팅방 페이지로 이동 시 프로필 이미지 경로도 전달
     final lastMessage = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TalkRoomPage(friendName: friendName),
+        builder: (context) => TalkRoomPage(friendName: friendName, profileImagePath: profileImagePath), // 프로필 이미지 경로 전달
       ),
     );
 
@@ -140,6 +146,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
       ),
     );
   }
+
 
   // 마지막 메시지 업데이트 함수
   void _updateLastMessage(String friendName, String lastMessage) async {
@@ -254,7 +261,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
                         icon: Icon(Icons.chat),
                         onPressed: () {
                           // 친구 클릭 시 TalkRoomPage로 이동
-                          _openChatRoom(context, friend['name']!);
+                          _openChatRoom(context, friend['name']!, friend['profileImage'] != null ? friend['profileImage'] : null);
                         },
                       ),
                       IconButton(
