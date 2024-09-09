@@ -1,10 +1,10 @@
-package com.example.demo;
+package org.soltalk.soltalk_backend;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DemoApplicationTests {
+class SoltalkBackendApplicationTests {
 
 	@Test
 	void contextLoads() {
