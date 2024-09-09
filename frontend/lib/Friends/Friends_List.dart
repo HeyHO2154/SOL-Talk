@@ -9,6 +9,7 @@ import '../Talk/Talk_Room.dart';
 import '../UserProfile/UserProfile.dart'; // UserProfilePage import
 import '../navigation.dart';
 import 'Friends_Add.dart';
+import 'Friends_Edit.dart';
 
 class FriendsListPage extends StatefulWidget {
   @override
@@ -262,9 +263,33 @@ class _FriendsListPageState extends State<FriendsListPage> {
               itemBuilder: (context, index) {
                 final friend = _friends[index];
                 return ListTile(
+                  onTap: () {
+                    // 친구 이름을 클릭했을 때도 채팅방으로 이동
+                    _openChatRoom(context, friend['name']!, friend['profileImage'] != null ? friend['profileImage'] : null);
+                  },
                   leading: GestureDetector(
-                    onTap: () {
-                      _pickFriendProfileImage(index); // 프로필 사진 클릭 시 이미지 변경 함수 호출
+                    onTap: () async {
+                      final updatedFriend = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FriendsEditPage(
+                            name: _friends[index]['name']!,
+                            chatData: _friends[index]['chatData']!,
+                            profileImagePath: _friends[index]['profileImage'],
+                          ),
+                        ),
+                      );
+
+                      if (updatedFriend != null) {
+                        setState(() {
+                          _friends[index] = {
+                            'name': updatedFriend['name'],
+                            'chatData': updatedFriend['chatData'],
+                            'profileImage': updatedFriend['profileImage'],
+                          };
+                        });
+                        _saveFriends(); // 수정된 데이터를 로컬 저장소에 저장
+                      }
                     },
                     child: CircleAvatar(
                       radius: 25,
@@ -277,16 +302,8 @@ class _FriendsListPageState extends State<FriendsListPage> {
                     ),
                   ),
                   title: Text(friend['name']!),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  trailing: Wrap(
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.chat),
-                        onPressed: () {
-                          // 친구 클릭 시 TalkRoomPage로 이동
-                          _openChatRoom(context, friend['name']!, friend['profileImage'] != null ? friend['profileImage'] : null);
-                        },
-                      ),
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
                         onPressed: () {
