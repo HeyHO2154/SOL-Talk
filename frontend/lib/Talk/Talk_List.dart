@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Talk_Room.dart';
 import 'dart:developer'; // 로그 출력을 위해 사용(디버그용)
@@ -23,20 +24,26 @@ class _TalkListPageState extends State<TalkListPage> {
   void _loadChatRooms() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? chatRoomsJson = prefs.getString('chatRooms');
-    log('불러온 채팅방 데이터: $chatRoomsJson'); // 불러온 데이터 로그 출력
-
     if (chatRoomsJson != null) {
       List<dynamic> chatRoomsList = json.decode(chatRoomsJson);
-      log('파싱된 채팅방 리스트: $chatRoomsList'); // 파싱된 리스트 출력
-
       setState(() {
         _chatRooms = chatRoomsList
             .map((chatRoom) => Map<String, String>.from(chatRoom as Map))
             .toList();
-        _sortChatRoomsByLastMessageTime(); // 최근 메시지 순으로 정렬
       });
-    } else {
-      log('채팅방 데이터가 없습니다.');
+      _updateChatRoomProfileImages(); // 프로필 이미지 경로 업데이트
+    }
+  }
+
+  // 프로필 이미지를 최신으로 반영하는 함수
+  void _updateChatRoomProfileImages() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    for (var chatRoom in _chatRooms) {
+      // 각 친구의 최신 프로필 이미지 경로를 SharedPreferences에서 가져옴
+      String? updatedProfileImage = prefs.getString('${chatRoom['name']}_profileImagePath');
+      setState(() {
+        chatRoom['profileImage'] = updatedProfileImage!; // 최신 프로필 이미지 경로를 반영
+      });
     }
   }
 
@@ -83,6 +90,8 @@ class _TalkListPageState extends State<TalkListPage> {
     log('삭제 후 남은 채팅방 데이터: $updatedChatRoomsJson'); // 삭제 후 데이터 로그 출력
     await prefs.setString('chatRooms', updatedChatRoomsJson);
   }
+
+
 
   // 마지막 메시지 업데이트 함수
   void _updateLastMessage(String roomName, String lastMessage) async {

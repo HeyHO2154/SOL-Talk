@@ -48,6 +48,18 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
     _birthdate = widget.birthdate;
     _phoneNumber = widget.phoneNumber;
     _bankAccount = widget.bankAccount;
+    _loadProfileImage(); // 저장된 프로필 이미지를 로드
+  }
+
+  // 프로필 이미지를 SharedPreferences에서 불러오는 함수
+  Future<void> _loadProfileImage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedImagePath = prefs.getString('profileImagePath'); // 저장된 프로필 이미지 경로 불러오기
+    if (savedImagePath != null) {
+      setState(() {
+        _profileImage = File(savedImagePath); // 프로필 이미지가 있으면 _profileImage에 할당
+      });
+    }
   }
 
   // 갤러리에서 프로필 사진 선택하는 함수

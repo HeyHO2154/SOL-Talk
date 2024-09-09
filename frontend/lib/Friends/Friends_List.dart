@@ -164,6 +164,24 @@ class _FriendsListPageState extends State<FriendsListPage> {
     }
   }
 
+  Future<void> _pickFriendProfileImage(int index) async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _friends[index]['profileImage'] = image.path; // 선택된 이미지 경로를 친구 목록에 저장
+      });
+
+      // 해당 친구의 이름을 가져와서 SharedPreferences에 프로필 이미지 경로 저장
+      String friendName = _friends[index]['name']!;
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('${friendName}_profileImagePath', image.path); // SharedPreferences에 저장
+
+      _saveFriends(); // 변경된 친구 목록을 저장
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -244,14 +262,19 @@ class _FriendsListPageState extends State<FriendsListPage> {
               itemBuilder: (context, index) {
                 final friend = _friends[index];
                 return ListTile(
-                  leading: CircleAvatar(
-                    radius: 25,
-                    backgroundImage: friend['profileImage'] != null
-                        ? FileImage(File(friend['profileImage']!))
-                        : null,
-                    child: friend['profileImage'] == null
-                        ? Text(friend['name']![0])
-                        : null, // 친구 이름의 첫 글자로 기본 프로필 표시
+                  leading: GestureDetector(
+                    onTap: () {
+                      _pickFriendProfileImage(index); // 프로필 사진 클릭 시 이미지 변경 함수 호출
+                    },
+                    child: CircleAvatar(
+                      radius: 25,
+                      backgroundImage: friend['profileImage'] != null
+                          ? FileImage(File(friend['profileImage']!))
+                          : null,
+                      child: friend['profileImage'] == null
+                          ? Text(friend['name']![0])
+                          : null, // 친구 이름의 첫 글자로 기본 프로필 표시
+                    ),
                   ),
                   title: Text(friend['name']!),
                   trailing: Row(
