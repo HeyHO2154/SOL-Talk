@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:math'; // 랜덤 선택을 위해 추가
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../navigation.dart';
+import 'chat_service.dart';
 
 class TalkRoomPage extends StatefulWidget {
   final String friendId; // friendId 추가
@@ -22,7 +24,9 @@ class TalkRoomPage extends StatefulWidget {
 class _TalkRoomPageState extends State<TalkRoomPage> {
   final TextEditingController _messageController = TextEditingController();
   final List<String> _messages = [];
+  late List<String> _friendMessages = []; // 친구 메시지 저장을 위한 리스트 추가
   final ScrollController _scrollController = ScrollController();
+  final ChatService _chatService = ChatService(); // ChatService 인스턴스 생성
 
   String _lastMessage = ""; // 마지막 메시지 저장 변수
 
@@ -36,8 +40,26 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
       });
       _saveMessages();
       _updateChatRoomLastMessageTime(); // 채팅방의 마지막 메시지 시간 업데이트
+
+      // 상대방의 메시지 중 하나를 랜덤하게 선택하여 답변
+      _respondWithRandomMessage();
     }
   }
+
+  // 상대방의 메시지 중 하나를 랜덤하게 선택하여 답변하는 함수
+  void _respondWithRandomMessage() {
+    if (_friendMessages.isNotEmpty) {
+      final random = Random();
+      int randomIndex = random.nextInt(_friendMessages.length);
+
+      setState(() {
+        _messages.add(_friendMessages[randomIndex]);
+        _scrollToBottom(); // 자동 스크롤
+      });
+      _saveMessages(); // 메시지 저장
+    }
+  }
+
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -71,18 +93,37 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
     }
   }
 
+  // 메시지 로드 및 친구 메시지 추출
   void _loadMessages() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? messagesJson = prefs.getString('messages_${widget.friendId}'); // ID로 메시지 불러오기
+    String? messagesJson = prefs.getString('messages_${widget.friendId}');
     if (messagesJson != null) {
       List<dynamic> messagesList = json.decode(messagesJson);
       setState(() {
         _messages.addAll(messagesList.cast<String>());
         if (_messages.isNotEmpty) {
-          _lastMessage = _messages.last; // 저장된 마지막 메시지로 설정
+          _lastMessage = _messages.last;
         }
       });
+      // 저장된 친구 메시지를 로드
+      _friendMessages = await _chatService.loadExtractedMessages(widget.friendId);
       _scrollToBottom();
+    }
+
+    // 메시지를 로드한 후 친구 메시지 추출
+    _extractFriendMessages();
+  }
+
+
+  // 채팅 데이터에서 친구의 메시지만 추출하는 함수
+  void _extractFriendMessages() {
+    final friendNamePattern = RegExp(r'^\[' + widget.friendName + r'\]');
+    for (var message in _messages) {
+      if (friendNamePattern.hasMatch(message)) {
+        // 친구가 보낸 메시지로 간주하고 메시지 부분만 추출
+        String friendMessage = message.split(']').last.trim();
+        _friendMessages.add(friendMessage);
+      }
     }
   }
 
