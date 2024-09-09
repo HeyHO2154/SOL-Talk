@@ -28,56 +28,34 @@ class _TalkListPageState extends State<TalkListPage> {
       List<dynamic> chatRoomsList = json.decode(chatRoomsJson);
       setState(() {
         _chatRooms = chatRoomsList
-            .map((chatRoom) => Map<String, String>.from(chatRoom as Map))
+            .map((chatRoom) => Map<String, String>.from(
+            (chatRoom as Map).map((key, value) {
+              return MapEntry(key.toString(), value?.toString() ?? ''); // null 값을 빈 문자열로 처리
+            })))
             .toList();
+        _sortChatRoomsByLastMessageTime(); // 불러온 후 정렬
       });
       _updateChatRoomProfileImages(); // 프로필 이미지 경로 업데이트
     }
   }
 
+
   // 프로필 이미지를 최신으로 반영하는 함수
   void _updateChatRoomProfileImages() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     for (var chatRoom in _chatRooms) {
-      // 각 친구의 최신 프로필 이미지 경로를 SharedPreferences에서 가져옴
-      String? updatedProfileImage = prefs.getString('${chatRoom['name']}_profileImagePath');
+      // 친구 ID 기반으로 최신 프로필 이미지와 이름을 가져옴
+      String? friendId = chatRoom['id'];
+      String? updatedProfileImage = prefs.getString('${friendId}_profileImagePath');
+      String? updatedName = prefs.getString('${friendId}_name');
+
       setState(() {
-        chatRoom['profileImage'] = updatedProfileImage!; // 최신 프로필 이미지 경로를 반영
+        chatRoom['profileImage'] = (updatedProfileImage ?? chatRoom['profileImage'])!; // 최신 프로필 이미지 적용
+        chatRoom['name'] = (updatedName ?? chatRoom['name'])!; // 최신 이름 적용
       });
     }
   }
 
-  // 채팅방을 추가하는 함수
-  Future<void> _addChatRoom(String friendName, String? profileImagePath) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? chatRoomsJson = prefs.getString('chatRooms');
-    List<dynamic> chatRoomsList = chatRoomsJson != null ? json.decode(chatRoomsJson) : [];
-
-    bool roomExists = chatRoomsList.any((room) => room['name'] == friendName);
-
-    // 새로운 채팅방 추가 시 현재 시간을 lastMessageTime으로 설정
-    if (!roomExists) {
-      chatRoomsList.add({
-        'name': friendName,
-        'lastMessage': 'Start chatting!',
-        'lastMessageTime': DateTime.now().toIso8601String(), // 방 생성 시 현재 시간 설정
-        'profileImage': profileImagePath, // 프로필 이미지 경로 저장
-      });
-
-      String updatedChatRoomsJson = json.encode(chatRoomsList);
-      log('저장할 채팅방 데이터: $updatedChatRoomsJson'); // 저장 전 데이터 로그 출력
-      await prefs.setString('chatRooms', updatedChatRoomsJson);
-
-      setState(() {
-        _chatRooms = chatRoomsList
-            .map((chatRoom) => Map<String, String>.from(chatRoom as Map))
-            .toList();
-        _sortChatRoomsByLastMessageTime(); // 정렬
-      });
-    } else {
-      log('채팅방이 이미 존재합니다.');
-    }
-  }
 
   // 채팅방 삭제 함수
   void _deleteChatRoom(int index) async {
@@ -106,7 +84,6 @@ class _TalkListPageState extends State<TalkListPage> {
         chatRoomsList[roomIndex]['lastMessageTime'] = DateTime.now().toIso8601String(); // 메시지 보낼 때 시간 업데이트
 
         String updatedChatRoomsJson = json.encode(chatRoomsList);
-        log('업데이트된 채팅방 데이터: $updatedChatRoomsJson'); // 업데이트 후 데이터 로그 출력
         await prefs.setString('chatRooms', updatedChatRoomsJson);
 
         setState(() {
@@ -150,9 +127,14 @@ class _TalkListPageState extends State<TalkListPage> {
               backgroundImage: profileImagePath != null
                   ? FileImage(File(profileImagePath))
                   : null,
-              child: profileImagePath == null
-                  ? Text(chatRoom['name']![0]) // 프로필 이미지가 없을 때 이니셜 표시
-                  : null,
+              child: profileImagePath == null || profileImagePath.isEmpty
+                  ? Text(
+                chatRoom['name'] != null && chatRoom['name']!.isNotEmpty
+                    ? chatRoom['name']![0] // 이름 첫 글자 표시
+                    : '?', // 이름이 없을 경우 기본값 설정 (예: '?')
+                style: TextStyle(fontSize: 24), // 텍스트 크기 조정
+              )
+                  : null, // 프로필 이미지가 있으면 이미지를 표시하고, 없으면 첫 글자 표시
             ),
             title: Text(chatRoom['name']!),
             subtitle: Text(chatRoom['lastMessage']!), // 마지막 메시지를 미리보기로 표시
@@ -190,12 +172,12 @@ class _TalkListPageState extends State<TalkListPage> {
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => TalkRoomPage(friendName: chatRoom['name']!),
+                  builder: (context) => TalkRoomPage(friendId: chatRoom['id']!, friendName: chatRoom['name']!, profileImagePath: chatRoom['profileImage']),
                 ),
               );
 
               if (result != null) {
-                _updateLastMessage(chatRoom['name']!, result); // 마지막 메시지 업데이트
+                _updateLastMessage(chatRoom['id']!, result); // 마지막 메시지 업데이트
               }
             },
           );

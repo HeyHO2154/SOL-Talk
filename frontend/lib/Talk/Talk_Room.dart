@@ -2,10 +2,18 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class TalkRoomPage extends StatefulWidget {
-  final String friendName;
+import '../navigation.dart';
 
-  TalkRoomPage({required this.friendName, String? profileImagePath});
+class TalkRoomPage extends StatefulWidget {
+  final String friendId; // friendId 추가
+  final String friendName;
+  final String? profileImagePath;
+
+  TalkRoomPage({
+    required this.friendId, // friendId 추가
+    required this.friendName,
+    this.profileImagePath,
+  });
 
   @override
   _TalkRoomPageState createState() => _TalkRoomPageState();
@@ -42,7 +50,7 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
   void _saveMessages() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String messagesJson = json.encode(_messages);
-    await prefs.setString('messages_${widget.friendName}', messagesJson);
+    await prefs.setString('messages_${widget.friendId}', messagesJson); // friendId로 저장
   }
 
   // 마지막 메시지와 시간 업데이트
@@ -51,7 +59,7 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
     String? chatRoomsJson = prefs.getString('chatRooms');
     if (chatRoomsJson != null) {
       List<dynamic> chatRoomsList = json.decode(chatRoomsJson);
-      int roomIndex = chatRoomsList.indexWhere((room) => room['name'] == widget.friendName);
+      int roomIndex = chatRoomsList.indexWhere((room) => room['id'] == widget.friendId); // ID로 찾기
 
       if (roomIndex != -1) {
         chatRoomsList[roomIndex]['lastMessage'] = _lastMessage;
@@ -65,7 +73,7 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
 
   void _loadMessages() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? messagesJson = prefs.getString('messages_${widget.friendName}');
+    String? messagesJson = prefs.getString('messages_${widget.friendId}'); // ID로 메시지 불러오기
     if (messagesJson != null) {
       List<dynamic> messagesList = json.decode(messagesJson);
       setState(() {
@@ -88,8 +96,14 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        Navigator.pop(context, _lastMessage); // 뒤로 가기 시 마지막 메시지 반환
-        return Future.value(true); // true로 설정하면 뒤로가기가 진행됨
+        // 뒤로 가기 버튼을 누르면 무조건 채팅방 목록 페이지로 이동
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NavigationPage(initialIndex: 1), // 채팅방 목록 탭으로 이동
+          ),
+        );
+        return Future.value(false); // 기본 뒤로 가기 동작 방지
       },
       child: Scaffold(
         appBar: AppBar(

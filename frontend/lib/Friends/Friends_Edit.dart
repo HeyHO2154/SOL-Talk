@@ -12,7 +12,7 @@ class FriendsEditPage extends StatefulWidget {
   FriendsEditPage({
     required this.name,
     required this.chatData,
-    required this.profileImagePath,
+    required this.profileImagePath, required String id,
   });
 
   @override

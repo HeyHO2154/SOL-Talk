@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io'; // 파일 관련 작업을 위해 추가
 
-import '../Talk/Talk_List.dart';
+import 'package:uuid/uuid.dart';
 import '../Talk/Talk_Room.dart';
 import '../UserProfile/UserProfile.dart'; // UserProfilePage import
 import '../navigation.dart';
@@ -18,6 +18,7 @@ class FriendsListPage extends StatefulWidget {
 
 class _FriendsListPageState extends State<FriendsListPage> {
   List<Map<String, String?>> _friends = []; // String?으로 변경하여 null 허용
+  final Uuid uuid = Uuid(); // UUID 생성기
   String _name = 'John Doe';
   String _jobTitle = 'Flutter Developer';
   String? _profileImagePath; // 프로필 사진 경로
@@ -53,15 +54,51 @@ class _FriendsListPageState extends State<FriendsListPage> {
     });
   }
 
-  // 프로필 수정 후 프로필 동기화 함수
+  // 프로필 수정 후 프로필 동기화 함수 및 채팅방 정보 갱신
   Future<void> _updateProfileFromPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // 프로필 정보 동기화
     setState(() {
       _name = prefs.getString('name') ?? _name;
       _jobTitle = prefs.getString('jobTitle') ?? _jobTitle;
       _profileImagePath = prefs.getString('profileImagePath'); // 프로필 이미지 경로 불러오기
     });
+
+    // 프로필에 해당하는 채팅방의 ID 가져오기
+    String? myId = prefs.getString('myId'); // 고유한 ID 불러오기
+
+    // 채팅방 리스트에서 내 프로필을 사용하는 방들 업데이트
+    if (myId != null) {
+      await _updateChatRoomProfile(myId, _name, _profileImagePath); // ID, 이름, 프로필 이미지 전달
+    }
   }
+
+  // 채팅방 리스트에 내 프로필 정보를 반영하는 함수
+  Future<void> _updateChatRoomProfile(String friendId, String updatedName, String? updatedProfileImage) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? chatRoomsJson = prefs.getString('chatRooms');
+
+    if (chatRoomsJson != null) {
+      List<dynamic> chatRoomsList = json.decode(chatRoomsJson);
+
+      // 채팅방 리스트에서 해당 친구의 프로필 정보를 사용하는 채팅방을 모두 업데이트
+      for (var room in chatRoomsList) {
+        if (room['id'] == friendId) { // ID를 기준으로 업데이트
+          room['name'] = updatedName; // 이름 업데이트
+
+          // 프로필 이미지가 null인 경우 기본값으로 빈 문자열을 설정
+          room['profileImage'] = updatedProfileImage ?? '';
+        }
+      }
+
+      // 업데이트된 채팅방 리스트 저장
+      String updatedChatRoomsJson = json.encode(chatRoomsList);
+      await prefs.setString('chatRooms', updatedChatRoomsJson); // 비동기 작업
+    }
+  }
+
+
 
   // 친구 목록을 로컬 저장소에 저장하는 함수
   void _saveFriends() async {
@@ -72,6 +109,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
 
   // 새로운 친구를 추가하고 저장하는 함수
   void _addFriend(Map<String, String?> friend) {
+    friend['id'] = uuid.v4(); // 고유 ID를 할당
     setState(() {
       _friends.add(friend); // 친구 목록에 새로운 친구 추가
     });
@@ -79,7 +117,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
   }
 
   // 친구를 삭제하고 관련 채팅방, 메시지 데이터를 삭제하는 함수
-  void _deleteFriendAndChatRoom(String friendName, int index) async {
+  void _deleteFriendAndChatRoom(String friendId, int index) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     // 친구 삭제
@@ -92,51 +130,57 @@ class _FriendsListPageState extends State<FriendsListPage> {
     String? chatRoomsJson = prefs.getString('chatRooms');
     if (chatRoomsJson != null) {
       List<dynamic> chatRoomsList = json.decode(chatRoomsJson);
-      chatRoomsList.removeWhere((room) => room['name'] == friendName);
+      chatRoomsList.removeWhere((room) => room['id'] == friendId); // ID로 채팅방 삭제
       String updatedChatRoomsJson = json.encode(chatRoomsList);
       await prefs.setString('chatRooms', updatedChatRoomsJson);
     }
 
     // 관련 메시지 데이터 삭제
-    await prefs.remove('messages_$friendName'); // 저장된 메시지 삭제
+    await prefs.remove('messages_$friendId'); // 저장된 메시지 삭제
   }
 
+
   // 채팅방 추가 함수 (TalkListPage에 채팅방 저장)
-  Future<void> _addChatRoom(String friendName, String? profileImagePath) async {
+  Future<void> _addChatRoom(String friendId, String friendName, String? profileImagePath) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? chatRoomsJson = prefs.getString('chatRooms');
     List<dynamic> chatRoomsList = chatRoomsJson != null ? json.decode(chatRoomsJson) : [];
-    bool roomExists = chatRoomsList.any((room) => room['name'] == friendName);
+
+    // 고유 ID를 사용하여 채팅방이 이미 존재하는지 확인
+    bool roomExists = chatRoomsList.any((room) => room['id'] == friendId);
 
     // 채팅방이 없을 경우 추가, 프로필 이미지 경로도 함께 저장
     if (!roomExists) {
       chatRoomsList.add({
+        'id': friendId, // 고유 ID로 채팅방 구분
         'name': friendName,
-        'lastMessage': 'Start chatting!',
+        'lastMessage': '',
         'profileImage': profileImagePath, // 프로필 이미지 경로 추가
         'lastMessageTime': DateTime.now().toIso8601String() // 채팅방 생성 시간 추가
       });
+
       String updatedChatRoomsJson = json.encode(chatRoomsList);
       await prefs.setString('chatRooms', updatedChatRoomsJson);
     }
   }
 
 
-  // 친구 클릭 시 TalkRoomPage로 이동 및 채팅방 생성
-  Future<void> _openChatRoom(BuildContext context, String friendName, String? profileImagePath) async {
-    // 채팅방 목록에 추가 (없을 경우 생성), 프로필 이미지 경로도 전달
-    await _addChatRoom(friendName, profileImagePath);
 
-    // 채팅방 페이지로 이동 시 프로필 이미지 경로도 전달
+  // 친구 클릭 시 TalkRoomPage로 이동 및 채팅방 생성
+  Future<void> _openChatRoom(BuildContext context, String friendId, String friendName, String? profileImagePath) async {
+    // 기존 채팅방이 있으면 새로운 채팅방을 만들지 않음 (ID를 기반으로)
+    await _addChatRoom(friendId, friendName, profileImagePath);
+
+    // 채팅방 페이지로 이동 시 ID와 프로필 이미지 경로도 전달
     final lastMessage = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TalkRoomPage(friendName: friendName, profileImagePath: profileImagePath), // 프로필 이미지 경로 전달
+        builder: (context) => TalkRoomPage(friendId: friendId, friendName: friendName, profileImagePath: profileImagePath), // ID로 채팅방을 연결
       ),
     );
 
     if (lastMessage != null) {
-      _updateLastMessage(friendName, lastMessage); // 마지막 메시지 업데이트
+      _updateLastMessage(friendId, lastMessage); // 마지막 메시지 업데이트
     }
 
     // TalkListPage로 네비게이션 바를 가진 상태로 이동
@@ -149,13 +193,14 @@ class _FriendsListPageState extends State<FriendsListPage> {
   }
 
 
+
   // 마지막 메시지 업데이트 함수
-  void _updateLastMessage(String friendName, String lastMessage) async {
+  void _updateLastMessage(String friendId, String lastMessage) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? chatRoomsJson = prefs.getString('chatRooms');
     if (chatRoomsJson != null) {
       List<dynamic> chatRoomsList = json.decode(chatRoomsJson);
-      int roomIndex = chatRoomsList.indexWhere((room) => room['name'] == friendName);
+      int roomIndex = chatRoomsList.indexWhere((room) => room['id'] == friendId); // ID로 찾음
 
       if (roomIndex != -1) {
         chatRoomsList[roomIndex]['lastMessage'] = lastMessage;
@@ -165,23 +210,6 @@ class _FriendsListPageState extends State<FriendsListPage> {
     }
   }
 
-  Future<void> _pickFriendProfileImage(int index) async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-
-    if (image != null) {
-      setState(() {
-        _friends[index]['profileImage'] = image.path; // 선택된 이미지 경로를 친구 목록에 저장
-      });
-
-      // 해당 친구의 이름을 가져와서 SharedPreferences에 프로필 이미지 경로 저장
-      String friendName = _friends[index]['name']!;
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('${friendName}_profileImagePath', image.path); // SharedPreferences에 저장
-
-      _saveFriends(); // 변경된 친구 목록을 저장
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -265,7 +293,12 @@ class _FriendsListPageState extends State<FriendsListPage> {
                 return ListTile(
                   onTap: () {
                     // 친구 이름을 클릭했을 때도 채팅방으로 이동
-                    _openChatRoom(context, friend['name']!, friend['profileImage'] != null ? friend['profileImage'] : null);
+                    _openChatRoom(
+                      context,
+                      friend['id']!, // 친구 고유 ID 전달
+                      friend['name']!, // 친구 이름
+                      friend['profileImage'] != null ? friend['profileImage'] : null, // 친구 프로필 이미지 경로
+                    );
                   },
                   leading: GestureDetector(
                     onTap: () async {
@@ -273,6 +306,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => FriendsEditPage(
+                            id: _friends[index]['id']!, // 고유 ID 유지
                             name: _friends[index]['name']!,
                             chatData: _friends[index]['chatData']!,
                             profileImagePath: _friends[index]['profileImage'],
@@ -283,12 +317,20 @@ class _FriendsListPageState extends State<FriendsListPage> {
                       if (updatedFriend != null) {
                         setState(() {
                           _friends[index] = {
+                            'id': _friends[index]['id'], // 유지되는 고유 ID
                             'name': updatedFriend['name'],
                             'chatData': updatedFriend['chatData'],
                             'profileImage': updatedFriend['profileImage'],
                           };
                         });
                         _saveFriends(); // 수정된 데이터를 로컬 저장소에 저장
+
+                        // 채팅방 정보도 함께 업데이트
+                        _updateChatRoomProfile(
+                            _friends[index]['id']!,      // 친구 ID
+                            updatedFriend['name'],       // 새 이름
+                            updatedFriend['profileImage'] // 새 프로필 이미지
+                        );
                       }
                     },
                     child: CircleAvatar(
