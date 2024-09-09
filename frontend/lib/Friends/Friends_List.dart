@@ -19,8 +19,8 @@ class FriendsListPage extends StatefulWidget {
 class _FriendsListPageState extends State<FriendsListPage> {
   List<Map<String, String?>> _friends = []; // String?으로 변경하여 null 허용
   final Uuid uuid = Uuid(); // UUID 생성기
-  String _name = 'John Doe';
-  String _jobTitle = 'Flutter Developer';
+  String _name = '사용자';
+  String _jobTitle = '이곳을 클릭해서 입력하세요!';
   String? _profileImagePath; // 프로필 사진 경로
 
   @override
@@ -109,7 +109,6 @@ class _FriendsListPageState extends State<FriendsListPage> {
 
   // 새로운 친구를 추가하고 저장하는 함수
   void _addFriend(Map<String, String?> friend) {
-    friend['id'] = uuid.v4(); // 고유 ID를 할당
     setState(() {
       _friends.add(friend); // 친구 목록에 새로운 친구 추가
     });

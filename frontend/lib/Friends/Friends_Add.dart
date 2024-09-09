@@ -2,8 +2,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart'; // 이미지 선택을 위한 패키지
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart'; // 권한 요청을 위해 추가
-import 'package:device_info_plus/device_info_plus.dart'; // 디바이스 정보 가져오기
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
+
+import '../Talk/chat_service.dart'; // 디바이스 정보 가져오기
 
 class FriendsAddPage extends StatefulWidget {
   @override
@@ -16,7 +21,8 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
   String _chatData = '';
   String _filePath = ''; // 선택된 파일 경로
   File? _profileImage; // 프로필 이미지 파일 저장 변수
-
+  ChatService _chatService = ChatService(); // ChatService 인스턴스 생성
+  final Uuid uuid = Uuid(); // UUID 생성기
   final ImagePicker _picker = ImagePicker(); // 이미지 선택을 위한 객체
 
   // 외부 저장소 권한 요청 및 확인 함수
@@ -65,20 +71,41 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
     }
   }
 
-  // 프로필 이미지 선택 함수
+  // 프로필 이미지 선택 함수 (저장 기능 추가)
   Future<void> _pickProfileImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
+      // 디바이스의 특정 경로에 복사본을 저장
+      Directory appDocDir = await getApplicationDocumentsDirectory(); // 영구 저장소 경로
+      String newFileName = '${Uuid().v4()}.png'; // 고유한 파일 이름 생성
+      String newPath = '${appDocDir.path}/$newFileName'; // 새 경로 설정
+      File newImage = await File(pickedFile.path).copy(newPath); // 파일 복사
+
       setState(() {
-        _profileImage = File(pickedFile.path); // 선택한 이미지 파일 저장
+        _profileImage = newImage; // 복사된 이미지 파일 저장
       });
+
+      // 프로필 이미지 경로를 SharedPreferences에 저장
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profileImagePath', newPath); // 경로 저장
+    }
+  }
+
+  // 캐시를 비우는 함수
+  Future<void> _clearCache() async {
+    final cacheDir = await getTemporaryDirectory();
+    if (cacheDir.existsSync()) {
+      cacheDir.deleteSync(recursive: true);
     }
   }
 
   // 파일 선택 함수
   Future<void> _pickFile() async {
     try {
+
+      await _clearCache(); // 캐시를 비워서 이전 파일을 제거
+
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         allowedExtensions: ['txt'], // txt 파일만 선택 가능
         type: FileType.custom,
@@ -89,13 +116,25 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
         File selectedFile = File(file.path!);
         String fileContent = await selectedFile.readAsString();
 
+        // 고유한 파일 이름을 생성 (예: "originalname-UUID.txt")
+        String newFileName = '${file.name.split('.').first}-${Uuid().v4()}.txt';
+
+        // 디바이스의 특정 경로에 복사본을 저장
+        Directory appDocDir = await getApplicationDocumentsDirectory(); // 로컬 앱 저장소 경로
+        String newPath = '${appDocDir.path}/$newFileName'; // 새 경로 설정
+        await selectedFile.copy(newPath); // 파일 복사
+
+        // SharedPreferences에 새 경로 저장
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('selectedFilePath', newPath); // 경로 저장
+
         setState(() {
           _chatData = fileContent; // 파일의 내용을 chatData로 설정
-          _filePath = file.path!;
+          _filePath = newPath; // 복사된 파일의 새 경로 저장
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('File selected: ${file.name}')),
+          SnackBar(content: Text('File selected and saved: $newFileName')),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -108,6 +147,8 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
       );
     }
   }
+
+
 
   // 권한이 없을 때 권한 설정으로 이동하는 다이얼로그
   void _showPermissionDialog() {
@@ -137,10 +178,19 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
   }
 
   // 친구 추가 함수
-  void _saveFriend() {
+  Future<void> _saveFriend() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+
+      // 채팅 데이터에서 친구의 메시지만 추출
+      List<String> friendMessages = await _chatService.extractMessagesFromChatData(_chatData, _name);
+
+      // 추출한 메시지 로컬 저장 (친구의 고유 ID로 저장)
+      String friendId = uuid.v4();
+      await _chatService.saveExtractedMessages(friendId, friendMessages);
+
       Navigator.pop(context, {
+        'id': friendId, // 생성된 UUID 전달
         'name': _name,
         'chatData': _chatData,
         'profileImage': _profileImage?.path, // 프로필 이미지 경로 저장
