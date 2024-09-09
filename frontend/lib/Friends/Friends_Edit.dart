@@ -48,15 +48,24 @@ class _FriendsEditPageState extends State<FriendsEditPage> {
     _loadSavedChatData();
   }
 
-  // 프로필 이미지 선택 함수
+  // 프로필 이미지 선택 함수 (저장 기능 추가)
   Future<void> _pickProfileImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
+      // 디바이스의 특정 경로에 복사본을 저장
+      Directory appDocDir = await getApplicationDocumentsDirectory(); // 영구 저장소 경로
+      String newFileName = '${Uuid().v4()}.png'; // 고유한 파일 이름 생성
+      String newPath = '${appDocDir.path}/$newFileName'; // 새 경로 설정
+      File newImage = await File(pickedFile.path).copy(newPath); // 파일 복사
+
       setState(() {
-        _profileImage = File(pickedFile.path); // 선택한 이미지 파일 저장
-        _profileImagePath = pickedFile.path; // 이미지 경로 저장
+        _profileImage = newImage; // 복사된 이미지 파일 저장
       });
+
+      // 프로필 이미지 경로를 SharedPreferences에 저장
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profileImagePath', newPath); // 경로 저장
     }
   }
 
@@ -216,7 +225,7 @@ class _FriendsEditPageState extends State<FriendsEditPage> {
               ElevatedButton(
                 onPressed: _saveFriend,
                 child: Text('Save'),
-              ),9
+              ),
             ],
           ),
         ),
