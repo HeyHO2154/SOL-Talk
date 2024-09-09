@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../UserProfile/UserProfile_edit.dart'; // UserProfileEditPage import
-import 'FinanceReport.dart'; // FinanceReportPage import
+import 'dart:io';
+import 'UserProfile_edit.dart'; // UserProfileEditPage import
 
 class UserProfilePage extends StatefulWidget {
   @override
@@ -16,6 +16,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   String _birthdate = '1990-01-01';
   String _phoneNumber = '123-456-7890';
   String _bankAccount = '1234-5678-9012';
+  String? _profileImagePath;
 
   @override
   void initState() {
@@ -24,7 +25,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   // 프로필 정보 로컬 저장소에서 불러오기
-  void _loadProfile() async {
+  Future<void> _loadProfile() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _name = prefs.getString('name') ?? _name;
@@ -34,21 +35,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
       _birthdate = prefs.getString('birthdate') ?? _birthdate;
       _phoneNumber = prefs.getString('phoneNumber') ?? _phoneNumber;
       _bankAccount = prefs.getString('bankAccount') ?? _bankAccount;
+      _profileImagePath = prefs.getString('profileImagePath');
     });
   }
 
-  // 프로필 수정 후 로컬 저장소에 저장하는 함수
-  void _updateProfile(Map<String, String> updatedProfile) async {
+  // 수정된 프로필을 반영하는 함수
+  void _updateProfile(Map<String, String?> updatedProfile) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _name = updatedProfile['name']!;
-      _jobTitle = updatedProfile['jobTitle']!;
-      _email = updatedProfile['email']!;
-      _gender = updatedProfile['gender']!;
-      _birthdate = updatedProfile['birthdate']!;
-      _phoneNumber = updatedProfile['phoneNumber']!;
-      _bankAccount = updatedProfile['bankAccount']!;
+      _name = updatedProfile['name'] ?? _name;
+      _jobTitle = updatedProfile['jobTitle'] ?? _jobTitle;
+      _email = updatedProfile['email'] ?? _email;
+      _gender = updatedProfile['gender'] ?? _gender;
+      _birthdate = updatedProfile['birthdate'] ?? _birthdate;
+      _phoneNumber = updatedProfile['phoneNumber'] ?? _phoneNumber;
+      _bankAccount = updatedProfile['bankAccount'] ?? _bankAccount;
+      _profileImagePath = updatedProfile['profileImagePath'];
     });
+
     await prefs.setString('name', _name);
     await prefs.setString('jobTitle', _jobTitle);
     await prefs.setString('email', _email);
@@ -56,6 +60,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
     await prefs.setString('birthdate', _birthdate);
     await prefs.setString('phoneNumber', _phoneNumber);
     await prefs.setString('bankAccount', _bankAccount);
+    if (_profileImagePath != null) {
+      await prefs.setString('profileImagePath', _profileImagePath!);
+    }
   }
 
   @override
@@ -72,7 +79,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundImage: AssetImage('assets/profile_picture.png'),
+                  backgroundImage: _profileImagePath != null
+                      ? FileImage(File(_profileImagePath!))
+                      : AssetImage('assets/profile_picture.png') as ImageProvider,
                 ),
                 SizedBox(width: 16),
                 Column(
@@ -117,6 +126,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             title: Text('Bank Account'),
             subtitle: Text(_bankAccount),
           ),
+          SizedBox(height: 16),
           ElevatedButton(
             onPressed: () async {
               final updatedProfile = await Navigator.push(
@@ -133,22 +143,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   ),
                 ),
               );
+
               if (updatedProfile != null) {
                 _updateProfile(updatedProfile);
               }
             },
             child: Text('Edit Profile'),
-          ),
-          SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              // 금융 분석 페이지로 이동
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => FinanceReportPage()),
-              );
-            },
-            child: Text('Go to Finance Report'),
           ),
         ],
       ),

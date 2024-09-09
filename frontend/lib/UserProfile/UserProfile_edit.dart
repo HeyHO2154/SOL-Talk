@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // SharedPreferences 추가
+import 'dart:io';
 
 class UserProfileEditPage extends StatefulWidget {
   final String name;
@@ -33,6 +36,7 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
   late String _birthdate;
   late String _phoneNumber;
   late String _bankAccount;
+  File? _profileImage; // 프로필 이미지 파일 변수
 
   @override
   void initState() {
@@ -46,9 +50,37 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
     _bankAccount = widget.bankAccount;
   }
 
-  void _saveProfile() {
+  // 갤러리에서 프로필 사진 선택하는 함수
+  Future<void> _pickProfileImage() async {
+    final ImagePicker _picker = ImagePicker();
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _profileImage = File(image.path); // 선택된 이미지 파일을 _profileImage에 저장
+      });
+    }
+  }
+
+  // 수정된 프로필 정보를 로컬 저장소에 저장하는 함수
+  Future<void> _saveProfileToLocal() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('name', _name);
+    await prefs.setString('jobTitle', _jobTitle);
+    await prefs.setString('email', _email);
+    await prefs.setString('gender', _gender);
+    await prefs.setString('birthdate', _birthdate);
+    await prefs.setString('phoneNumber', _phoneNumber);
+    await prefs.setString('bankAccount', _bankAccount);
+    if (_profileImage != null) {
+      await prefs.setString('profileImagePath', _profileImage!.path); // 프로필 이미지 경로 저장
+    }
+  }
+
+  void _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      await _saveProfileToLocal(); // 로컬 저장소에 저장
       Navigator.pop(context, {
         'name': _name,
         'jobTitle': _jobTitle,
@@ -57,6 +89,7 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
         'birthdate': _birthdate,
         'phoneNumber': _phoneNumber,
         'bankAccount': _bankAccount,
+        'profileImagePath': _profileImage?.path, // 이미지 경로 추가
       });
     }
   }
@@ -73,6 +106,17 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
           key: _formKey,
           child: Column(
             children: [
+              GestureDetector(
+                onTap: _pickProfileImage, // 프로필 사진 선택
+                child: CircleAvatar(
+                  radius: 60,
+                  backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
+                  child: _profileImage == null
+                      ? Icon(Icons.camera_alt, size: 40) // 기본 아이콘
+                      : null, // 프로필 이미지가 없을 때 기본 아이콘 표시
+                ),
+              ),
+              SizedBox(height: 16),
               TextFormField(
                 initialValue: _name,
                 decoration: InputDecoration(labelText: 'Name'),

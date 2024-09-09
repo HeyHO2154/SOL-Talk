@@ -43,7 +43,17 @@ class _FriendsListPageState extends State<FriendsListPage> {
   }
 
   // 본인 프로필을 로컬 저장소에서 불러오는 함수
-  void _loadProfile() async {
+  Future<void> _loadProfile() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _name = prefs.getString('name') ?? _name;
+      _jobTitle = prefs.getString('jobTitle') ?? _jobTitle;
+      _profileImagePath = prefs.getString('profileImagePath'); // 프로필 이미지 경로 불러오기
+    });
+  }
+
+  // 프로필 수정 후 프로필 동기화 함수
+  Future<void> _updateProfileFromPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _name = prefs.getString('name') ?? _name;
@@ -105,20 +115,6 @@ class _FriendsListPageState extends State<FriendsListPage> {
     }
   }
 
-  // 프로필 사진 선택 함수
-  Future<void> _pickProfileImage() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-
-    if (image != null) {
-      setState(() {
-        _profileImagePath = image.path; // 선택된 이미지 경로 저장
-      });
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setString('profileImagePath', image.path); // 프로필 이미지 경로를 로컬 저장소에 저장
-    }
-  }
-
   // 친구 클릭 시 TalkRoomPage로 이동 및 채팅방 생성
   Future<void> _openChatRoom(BuildContext context, String friendName) async {
     // 채팅방 목록에 추가 (없을 경우 생성)
@@ -145,6 +141,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
     );
   }
 
+  // 마지막 메시지 업데이트 함수
   void _updateLastMessage(String friendName, String lastMessage) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? chatRoomsJson = prefs.getString('chatRooms');
@@ -187,9 +184,16 @@ class _FriendsListPageState extends State<FriendsListPage> {
         children: [
           // 본인 프로필
           InkWell(
-            onTap: () {
-              // 프로필 이미지 선택
-              _pickProfileImage();
+            onTap: () async {
+              // UserProfilePage로 이동 후, 수정된 프로필 정보 받기
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserProfilePage(), // UserProfilePage로 이동
+                ),
+              );
+              // 수정된 프로필 정보를 동기화
+              _updateProfileFromPreferences();
             },
             child: Padding(
               padding: const EdgeInsets.all(16.0),
