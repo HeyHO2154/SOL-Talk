@@ -347,6 +347,41 @@ class _FriendsListPageState extends State<FriendsListPage> {
                   trailing: Wrap(
                     children: [
                       IconButton(
+                        icon: Icon(Icons.edit, color: Colors.black), // 수정 버튼
+                        onPressed: () async {
+                          final updatedFriend = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FriendsEditPage(
+                                id: friend['id']!, // 고유 ID 유지
+                                name: friend['name']!,
+                                chatData: friend['chatData']!,
+                                profileImagePath: friend['profileImage'],
+                              ),
+                            ),
+                          );
+
+                          if (updatedFriend != null) {
+                            setState(() {
+                              _friends[index] = {
+                                'id': _friends[index]['id'], // 유지되는 고유 ID
+                                'name': updatedFriend['name'],
+                                'chatData': updatedFriend['chatData'],
+                                'profileImage': updatedFriend['profileImage'],
+                              };
+                            });
+                            _saveFriends(); // 수정된 데이터를 로컬 저장소에 저장
+
+                            // 채팅방 정보도 함께 업데이트
+                            _updateChatRoomProfile(
+                              _friends[index]['id']!, // 친구 ID
+                              updatedFriend['name'], // 새 이름
+                              updatedFriend['profileImage'], // 새 프로필 이미지
+                            );
+                          }
+                        },
+                      ),
+                      IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
                         onPressed: () {
                           // 친구 삭제 확인 대화 상자 표시
