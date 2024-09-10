@@ -55,15 +55,14 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
   // 프로필 이미지를 SharedPreferences에서 불러오는 함수
   Future<void> _loadProfileImage() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? savedImagePath = prefs.getString('profileImagePath'); // 저장된 프로필 이미지 경로 불러오기
-    if (savedImagePath != null) {
+    String? savedImagePath = prefs.getString('userProfileImagePath');
+    if (savedImagePath != null && savedImagePath.isNotEmpty) {
       setState(() {
-        _profileImage = File(savedImagePath); // 프로필 이미지가 있으면 _profileImage에 할당
+        _profileImage = File(savedImagePath);
       });
     }
   }
 
-  // 갤러리에서 프로필 사진 선택하는 함수
   // 갤러리에서 프로필 사진 선택하는 함수
   Future<void> _pickProfileImage() async {
     final ImagePicker _picker = ImagePicker();
@@ -71,23 +70,25 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
 
     if (image != null) {
       Directory appDocDir = await getApplicationDocumentsDirectory();
-      String newFileName = 'user_profile_image.png'; // 사용자 프로필 이미지 고유 이름
+      String newFileName = '${DateTime.now().millisecondsSinceEpoch}_profile_image.png';
       String newPath = '${appDocDir.path}/$newFileName';
 
       // 이미지 복사 과정 확인
       try {
         File newImage = await File(image.path).copy(newPath); // 이미지를 앱 전용 저장소로 복사
 
+        // UI 즉시 반영
         setState(() {
           _profileImage = newImage; // 복사된 이미지 파일을 _profileImage에 저장
-          print("이미지 복사 성공: ${newImage.path}");
+          print("현재 이미지 경로: ${newImage.path}");
+          print("프로필 이미지가 성공적으로 업데이트되었습니다.");
+          print(_profileImage);
         });
 
         // 프로필 이미지 경로를 SharedPreferences에 저장
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('profileImagePath', newPath); // 이미지 경로를 로컬에 저장
+        await prefs.setString('userProfileImagePath', newPath); // 이미지 경로를 로컬에 저장
 
-        _loadProfileImage();  // 이미지가 저장된 후 다시 불러와 즉시 반영
         print("이미지 경로 저장 성공: $newPath");
       } catch (e) {
         print("이미지 복사 실패: $e");
@@ -96,6 +97,8 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
       print("이미지를 선택하지 않았습니다.");
     }
   }
+
+
 
 
   // 수정된 프로필 정보를 로컬 저장소에 저장하는 함수
@@ -109,7 +112,7 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
     await prefs.setString('phoneNumber', _phoneNumber);
     await prefs.setString('bankAccount', _bankAccount);
     if (_profileImage != null) {
-      await prefs.setString('profileImagePath', _profileImage!.path); // 프로필 이미지 경로 저장
+      await prefs.setString('userProfileImagePath', _profileImage!.path); // 프로필 이미지 경로 저장
     }
   }
 
@@ -125,7 +128,7 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
         'birthdate': _birthdate,
         'phoneNumber': _phoneNumber,
         'bankAccount': _bankAccount,
-        'profileImagePath': _profileImage?.path, // 이미지 경로 추가
+        'userProfileImagePath': _profileImage?.path, // 이미지 경로 추가
       });
     }
   }
@@ -147,7 +150,7 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
                 child: CircleAvatar(
                   radius: 60,
                   backgroundImage: _profileImage != null
-                      ? FileImage(_profileImage!) // _profileImage가 존재하면 로드
+                      ? FileImage(_profileImage!)// _profileImage가 존재하면 로드
                       : null, // 프로필 이미지가 없을 때는 null
                   child: _profileImage == null
                       ? Icon(Icons.camera_alt, size: 40) // 이미지가 없을 때 기본 아이콘

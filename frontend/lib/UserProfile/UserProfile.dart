@@ -35,7 +35,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       _birthdate = prefs.getString('birthdate') ?? _birthdate;
       _phoneNumber = prefs.getString('phoneNumber') ?? _phoneNumber;
       _bankAccount = prefs.getString('bankAccount') ?? _bankAccount;
-      _profileImagePath = prefs.getString('profileImagePath');
+      _profileImagePath = prefs.getString('userProfileImagePath');
     });
   }
 
@@ -50,7 +50,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       _birthdate = updatedProfile['birthdate'] ?? _birthdate;
       _phoneNumber = updatedProfile['phoneNumber'] ?? _phoneNumber;
       _bankAccount = updatedProfile['bankAccount'] ?? _bankAccount;
-      _profileImagePath = updatedProfile['profileImagePath'];
+      _profileImagePath = updatedProfile['userProfileImagePath'];
     });
 
     await prefs.setString('name', _name);
@@ -62,7 +62,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     await prefs.setString('bankAccount', _bankAccount);
     // 프로필 수정 후 SharedPreferences에 프로필 이미지 경로 저장
     if (_profileImagePath != null) {
-      await prefs.setString('profileImagePath', _profileImagePath!); // 경로 저장
+      await prefs.setString('userProfileImagePath', _profileImagePath!); // 경로 저장
     }
   }
 
@@ -82,7 +82,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   radius: 30,
                   backgroundImage: _profileImagePath != null
                       ? FileImage(File(_profileImagePath!))  // 로컬 저장소에서 이미지 로드
-                      : AssetImage('assets/profile_picture.png') as ImageProvider,  // 기본 이미지
+                      : null,  // 이미지가 없을 때는 null
+                  child: _profileImagePath == null
+                      ? Text(
+                    _name[0],  // 이름의 첫 글자를 표시
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                      : null,  // 이미지가 있으면 텍스트 대신 이미지를 표시
                 ),
                 SizedBox(width: 16),
                 Column(

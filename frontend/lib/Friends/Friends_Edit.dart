@@ -61,11 +61,13 @@ class _FriendsEditPageState extends State<FriendsEditPage> {
 
       setState(() {
         _profileImage = newImage; // 복사된 이미지 파일 저장
+        _profileImagePath = newPath; // 이미지 경로 업데이트
       });
 
       // 프로필 이미지 경로를 SharedPreferences에 저장
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('profileImagePath', newPath); // 경로 저장
+
     }
   }
 

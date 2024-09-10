@@ -111,7 +111,8 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
       List<dynamic> messagesList = json.decode(messagesJson);
 
       setState(() {
-        // 메시지 리스트를 처리할 때, 타입에 맞게 변환해줍니다.
+        //_messages.clear();
+        //메시지 리스트를 처리할 때, 타입에 맞게 변환해줍니다.
         _messages.addAll(messagesList.map((message) {
           if (message is String) {
             // 만약 메시지가 String 형식이라면, 기존에 저장된 형식으로 처리

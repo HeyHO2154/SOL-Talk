@@ -50,7 +50,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
     setState(() {
       _name = prefs.getString('name') ?? _name;
       _jobTitle = prefs.getString('jobTitle') ?? _jobTitle;
-      _profileImagePath = prefs.getString('profileImagePath'); // 프로필 이미지 경로 불러오기
+      _profileImagePath = prefs.getString('userProfileImagePath'); // 프로필 이미지 경로 불러오기
     });
   }
 
@@ -62,7 +62,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
     setState(() {
       _name = prefs.getString('name') ?? _name;
       _jobTitle = prefs.getString('jobTitle') ?? _jobTitle;
-      _profileImagePath = prefs.getString('profileImagePath'); // 프로필 이미지 경로 불러오기
+      _profileImagePath = prefs.getString('userProfileImagePath'); // 프로필 이미지 경로 불러오기
     });
 
     // 프로필에 해당하는 채팅방의 ID 가져오기
@@ -255,11 +255,17 @@ class _FriendsListPageState extends State<FriendsListPage> {
                   CircleAvatar(
                     radius: 30,
                     backgroundImage: _profileImagePath != null
-                        ? FileImage(File(_profileImagePath!)) // 프로필 이미지가 있는 경우, 로컬 저장소에서 로드
-                        : null, // 프로필 이미지가 없을 때는 null
+                        ? FileImage(File(_profileImagePath!))  // 로컬 저장소에서 이미지 로드
+                        : null,  // 이미지가 없을 때는 null
                     child: _profileImagePath == null
-                        ? Text(_name[0], style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)) // 프로필 이미지가 없을 때 이니셜 표시
-                        : null, // 프로필 이미지가 있을 때는 이니셜 대신 이미지 표시
+                        ? Text(
+                      _name[0],  // 이름의 첫 글자를 표시
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                        : null,  // 이미지가 있으면 텍스트 대신 이미지를 표시
                   ),
                   SizedBox(width: 16),
                   Column(
