@@ -1,9 +1,12 @@
 package org.soltalk.soltalk_backend.financial.repository;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import org.soltalk.soltalk_backend.financial.dto.*;
+import org.soltalk.soltalk_backend.financial.projection.AccountKey;
+import org.soltalk.soltalk_backend.financial.projection.CategorySpendingAvg;
+import org.soltalk.soltalk_backend.financial.projection.FinancialTrend;
+import org.soltalk.soltalk_backend.financial.projection.UserCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -66,7 +69,7 @@ public interface FinancialSummaryRepository extends JpaRepository<DailyFinancial
                 + "    ) "
                 + "GROUP BY do.category, uag.age_group ",
             nativeQuery = true)
-    List<CategorySpendingAvgDTO> findTop5CategoriesWithAvg(@Param("userId") int userId);
+    List<CategorySpendingAvg> findTop5CategoriesWithAvg(@Param("userId") int userId);
 
 
     // 최근 한달 소비 상위 10개 카테고리의 전월 대비 소비 트렌드 (증감 추이 - 증감률)
@@ -106,7 +109,7 @@ public interface FinancialSummaryRepository extends JpaRepository<DailyFinancial
                     ") n ON r.category = n.category " +
                     "ORDER BY r.total_amount DESC",
             nativeQuery = true)
-    List<FinancialTrendDTO> getSpendingTrends(@Param("userId") int userId);
+    List<FinancialTrend> getSpendingTrends(@Param("userId") int userId);
 
 
     // 최근 7일 카테고리별 소비금액
@@ -140,7 +143,7 @@ public interface FinancialSummaryRepository extends JpaRepository<DailyFinancial
                     + "AND   u.user_id = a.user_id  "
                     + "AND   a.account_type = 2 "
             , nativeQuery = true)
-    UserCategoryDTO getMostSpendingCategory(@Param("userId") int userId);
+    UserCategory getMostSpendingCategory(@Param("userId") int userId);
 
 
     //최근 한달 전월 대비 지출 증감이 가장 큰 카테고리
@@ -177,7 +180,7 @@ public interface FinancialSummaryRepository extends JpaRepository<DailyFinancial
                     + "WHERE a.account_type = 2 "
                     + "LIMIT 1"
             , nativeQuery = true)
-    UserCategoryDTO getCategoryWithHighestSpendingGrowth(@Param("userId") int userId);
+    UserCategory getCategoryWithHighestSpendingGrowth(@Param("userId") int userId);
 
 
 
@@ -265,6 +268,6 @@ public interface FinancialSummaryRepository extends JpaRepository<DailyFinancial
             + "AND u.user_id = :userId "
             + "AND account_type = 1 " // 저축계좌
             , nativeQuery = true)
-    AccountKeyDTO findActiveSavingsAccounts(@Param("userId") int userId);
+    AccountKey findActiveSavingsAccounts(@Param("userId") int userId);
 
 }
