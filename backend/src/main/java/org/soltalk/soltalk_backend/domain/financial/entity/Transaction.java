@@ -25,7 +25,7 @@ public class Transaction {
     private Account acccount;
 
     // 거래 금액
-    @Column(name = "amount", nullable = false, precision = 15, scale = 2)
+    @Column(name = "amount", nullable = false, precision = 15)
     private Double amount;
 
     // 거래 유형('IN', 'OUT')

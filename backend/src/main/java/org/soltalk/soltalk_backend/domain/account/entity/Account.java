@@ -24,8 +24,8 @@ public class Account {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // 계좌 잔액 (소수점 2자리까지)
-    @Column(name = "balance", precision = 15, scale = 2, nullable = false)
+    // 계좌 잔액
+    @Column(name = "balance", precision = 15, nullable = false)
     private Double balance;
 
     // 계좌 유형(1:저축 2:입출금)
