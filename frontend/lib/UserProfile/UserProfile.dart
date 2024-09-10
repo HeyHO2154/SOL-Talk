@@ -60,8 +60,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
     await prefs.setString('birthdate', _birthdate);
     await prefs.setString('phoneNumber', _phoneNumber);
     await prefs.setString('bankAccount', _bankAccount);
+    // 프로필 수정 후 SharedPreferences에 프로필 이미지 경로 저장
     if (_profileImagePath != null) {
-      await prefs.setString('profileImagePath', _profileImagePath!);
+      await prefs.setString('profileImagePath', _profileImagePath!); // 경로 저장
     }
   }
 
@@ -80,8 +81,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 CircleAvatar(
                   radius: 30,
                   backgroundImage: _profileImagePath != null
-                      ? FileImage(File(_profileImagePath!))
-                      : AssetImage('assets/profile_picture.png') as ImageProvider,
+                      ? FileImage(File(_profileImagePath!))  // 로컬 저장소에서 이미지 로드
+                      : AssetImage('assets/profile_picture.png') as ImageProvider,  // 기본 이미지
                 ),
                 SizedBox(width: 16),
                 Column(
