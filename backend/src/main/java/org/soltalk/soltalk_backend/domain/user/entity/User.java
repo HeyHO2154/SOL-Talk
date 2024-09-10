@@ -2,12 +2,7 @@ package org.soltalk.soltalk_backend.domain.user.entity;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -48,6 +43,11 @@ public class User {
     // 사용자 생년월일
     @Column(name = "birth", nullable = false)
     private LocalDateTime birth;
+
+    // 성별
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender", nullable = false)
+    private Gender gender;
 
     // 사용자 API KEY
     @Column(name = "user_key", length = 125)
