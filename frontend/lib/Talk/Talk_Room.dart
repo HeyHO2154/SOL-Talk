@@ -182,7 +182,7 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Chat with ${widget.friendName}'),
+          title: Text('${widget.friendName}'),
           actions: [
             PopupMenuButton<double>(
               onSelected: (newSize) => _changeFontSize(newSize),
