@@ -6,12 +6,16 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
+@EntityListeners(AuditingEntityListener.class)  // Auditing 활성화 (날짜 갱신)
 public class User {
 
     // 사용자 일련번호 - PK
@@ -21,15 +25,15 @@ public class User {
     private int userId;
 
     // 사용자 로그인 ID
-    @Column(name = "login_id", nullable = true, length = 50)
+    @Column(name = "login_id", nullable = false, length = 50)
     private String loginId;
 
     // 사용자 비밀번호
-    @Column(name = "password", nullable = true, length = 255)
+    @Column(name = "password", nullable = false, length = 255)
     private String password;
 
     // 사용자 이름
-    @Column(name = "name", nullable = true, length = 50)
+    @Column(name = "name", nullable = false, length = 50)
     private String name;
 
     // 사용자 이메일
@@ -54,10 +58,10 @@ public class User {
     private String userKey;
 
     // 계정 생성일
-    @Column(name = "created_at", nullable = false)
+    @CreatedDate
     private LocalDateTime createdAt;
 
     // 최종 계정 수정일
-    @Column(name = "updated_at", nullable = false)
+    @LastModifiedDate
     private LocalDateTime updatedAt;
 }
