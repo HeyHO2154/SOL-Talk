@@ -1,6 +1,6 @@
-package org.soltalk.soltalk_backend.financial.dto;
+package org.soltalk.soltalk_backend.financial.projection;
 
-public interface FinancialTrendDTO {
+public interface FinancialTrend {
     String getCategory();
     int getTotalAmount();
     int getTotalAmountBefore();

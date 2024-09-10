@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TransactionDTO {
+public class TransactionSummaryResponse {
 	// 클래스 이름 바꾸기
 	
 	private String transactionDate;
