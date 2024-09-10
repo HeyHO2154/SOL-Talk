@@ -1,14 +1,18 @@
-package org.soltalk.soltalk_backend.util;
+package org.soltalk.soltalk_backend.config;
 
 public class OpenApiUrls {
-	
+
+	private static final String COMMON_URL = "http://localhost:9090/soltalk/openapi/v1/";
+
+	//// 사용자 계정 생성
+	public static final String CREATE_USER_KEY = COMMON_URL + "member/";
+
 	//// 입출금 URL 공통 
-	public static final String DEMAND_DEPOSIT_URL = "http://localhost:9090/soltalk/openapi/v1/demandDeposit/";
+	public static final String DEMAND_DEPOSIT_URL = COMMON_URL + "demandDeposit/";
 	//// 적금 URL 공통 
-	public static final String SAVINGS_URL = "http://localhost:9090/soltalk/openapi/v1/savings/";
-	
+	public static final String SAVINGS_URL = COMMON_URL + "savings/";
 	//// 1원 인증 URL 공통
-	public static final String ACCOUNT_AUTH_URL = "http://localhost:9090/soltalk/openapi/v1/accountAuth/";
+	public static final String ACCOUNT_AUTH_URL = COMMON_URL + "accountAuth/";
 	
 	//// 입출금 계좌
 	// 예금주 조회

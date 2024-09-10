@@ -20,10 +20,26 @@ public class AccountController {
     private final AccountService accountService;
     private static final Logger logger = LoggerFactory.getLogger(AccountController.class.getSimpleName());
 
+    /**
+     * 1원 송금
+     * @param accountNo
+     * @param userId
+     * @return
+     * @throws URISyntaxException
+     */
     @PostMapping("/transfer/one_won")
     public ResponseEntity<String> transferOneWon(@RequestParam("accountNo") String accountNo,
-                                                 @RequestParam("email") String email) throws URISyntaxException {
-        logger.info("transferOneWon()...accountNo:{}, email:{}", accountNo, email);
-        return ResponseEntity.ok(accountService.transferOneWon(accountNo, email));
+                                                 @RequestParam("userId") int userId) throws URISyntaxException {
+        logger.info("transferOneWon()...accountNo:{}, userId:{}", accountNo, userId);
+        return ResponseEntity.ok(accountService.transferOneWon(accountNo, userId));
+    }
+
+    // 1원 검증
+    @PostMapping("/verify/one_won")
+    public ResponseEntity<String> verifyOneWon(@RequestParam("accountNo") String accountNo,
+                                               @RequestParam("authCode") String authCode,
+                                               @RequestParam("userId") int userId) throws URISyntaxException {
+        logger.info("verifyOneWon()...accountNo: {}, authCode: {}, userId:{}", accountNo, authCode, userId);
+        return ResponseEntity.ok(accountService.verifyOneWon(accountNo, authCode, userId));
     }
 }

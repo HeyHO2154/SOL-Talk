@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.soltalk.soltalk_backend.domain.account.projection.SummaryAccount;
 import org.soltalk.soltalk_backend.domain.financial.dto.TransactionSummaryResponse;
 import org.soltalk.soltalk_backend.domain.financial.projection.UserCategory;
-import org.soltalk.soltalk_backend.util.OpenApiUrls;
+import org.soltalk.soltalk_backend.config.OpenApiUrls;
 import org.soltalk.soltalk_backend.util.OpenApiUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -100,7 +100,7 @@ public class DemandDepositCollector {
         logger.info("fetchTransactionsForMonth()...UserCategoryDTO:{}", categoryDTO.toString());
 		String startDate = LocalDate.now().minusDays(30).format(OpenApiUtil.DATE_FORMATTER); //30일전부터
 		String endDate = LocalDate.now().minusDays(1).format(OpenApiUtil.DATE_FORMATTER); //어제까지
-		
+
 		Map<String, String> headerMap = OpenApiUtil.createHeaders(categoryDTO.getUserKey(), OpenApiUrls.INQUIRE_TRANSACTION_HISTORY_LIST);
         Map<String, Object> requestMap = OpenApiUtil.createTransactionHistoryRequestDataForMonth(categoryDTO.getAccountNo(), startDate, endDate, "D", headerMap);
 

@@ -1,4 +1,4 @@
-package org.soltalk.soltalk_backend.domain.financial.entity;
+package org.soltalk.soltalk_backend.domain.transaction.entity;
 
 import java.time.LocalDateTime;
 

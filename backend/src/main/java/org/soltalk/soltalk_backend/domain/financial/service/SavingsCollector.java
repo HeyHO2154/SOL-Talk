@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.soltalk.soltalk_backend.domain.account.projection.SummaryAccount;
 import org.soltalk.soltalk_backend.domain.financial.projection.AccountKey;
-import org.soltalk.soltalk_backend.util.OpenApiUrls;
+import org.soltalk.soltalk_backend.config.OpenApiUrls;
 import org.soltalk.soltalk_backend.util.OpenApiUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

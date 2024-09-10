@@ -19,9 +19,8 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-//@Component
 public class OpenApiUtil {
-	
+
 	public static final String API_KEY = "cb6cca464d504a29a809ced072ba5aec";
 	
 	public static final DateTimeFormatter DATE_FORMATTER= DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -39,30 +38,17 @@ public class OpenApiUtil {
 		logger.info("createHeaders()...user_key:{}, apiName:{}", user_key, apiName);
 		Random random = new Random();
 		String sysdate = LocalDate.now().format(DATE_FORMATTER);
-        return createHeaders(user_key, apiName, sysdate, random);
-    }
-	
-	/**
-     * OpenApi 사용 시 Header 생성
-     * 날짜, 랜덤을 모두 파라미터로 받아옴 (스케줄링 시 같은 값을 계속 쓸 것이기 때문)
-     * 
-     * @param apiName Open Api Url 의 엔드포인트
-     * @return header
-     */
-	public static Map<String, String> createHeaders(String user_key, String apiName, String sysdate, Random random) {
-		logger.info("createHeaders()...user_key:{}, apiName:{}, sysdate:{}, random:{}", user_key, apiName, sysdate, random);
-        String systime = LocalDateTime.now().format(TIME_FORMATTER);
-		
+		String systime = LocalDateTime.now().format(TIME_FORMATTER);
 		Map<String, String> headerMap = new HashMap<>();
-        headerMap.put("apiName", apiName);
-        headerMap.put("transmissionDate", sysdate);
-        headerMap.put("transmissionTime", systime);
-        headerMap.put("institutionCode", "00100");
-        headerMap.put("fintechAppNo", "001");
-        headerMap.put("apiServiceCode", apiName);
-        headerMap.put("institutionTransactionUniqueNo", sysdate + systime + String.format("%06d", random.nextInt(1000000)));
-        headerMap.put("apiKey", API_KEY);
-        headerMap.put("userKey", user_key);
+		headerMap.put("apiName", apiName);
+		headerMap.put("transmissionDate", sysdate);
+		headerMap.put("transmissionTime", systime);
+		headerMap.put("institutionCode", "00100");
+		headerMap.put("fintechAppNo", "001");
+		headerMap.put("apiServiceCode", apiName);
+		headerMap.put("institutionTransactionUniqueNo", sysdate + systime + String.format("%06d", random.nextInt(1000000)));
+		headerMap.put("apiKey", API_KEY);
+		headerMap.put("userKey", user_key);
         return headerMap;
     }
 	
@@ -70,7 +56,7 @@ public class OpenApiUtil {
 	 * Open Api 호출 (단건)
 	 * 
 	 * @param uri 호출할 URI
-	 * @param request 데이터
+	 * @param requestMap 데이터
 	 * @return String 타입의 응답entity 반환
 	 */
 	public static ResponseEntity<String> callApi(URI uri, Map<String, Object> requestMap) {
