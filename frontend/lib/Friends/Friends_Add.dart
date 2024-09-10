@@ -11,6 +11,8 @@ import 'package:uuid/uuid.dart';
 import '../Talk/chat_service.dart'; // 디바이스 정보 가져오기
 
 class FriendsAddPage extends StatefulWidget {
+  get id => null;
+
   @override
   _FriendsAddPageState createState() => _FriendsAddPageState();
 }
@@ -20,10 +22,17 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
   String _name = '';
   String _chatData = '';
   String _filePath = ''; // 선택된 파일 경로
+  String? friendId; // friendId를 저장하는 변수
   File? _profileImage; // 프로필 이미지 파일 저장 변수
   ChatService _chatService = ChatService(); // ChatService 인스턴스 생성
   final Uuid uuid = Uuid(); // UUID 생성기
   final ImagePicker _picker = ImagePicker(); // 이미지 선택을 위한 객체
+
+  @override
+  void initState() {
+    super.initState();
+    friendId = uuid.v4(); // friendId를 한 번만 생성
+  }
 
   // 외부 저장소 권한 요청 및 확인 함수
   Future<void> _checkAndRequestStoragePermission() async {
@@ -103,7 +112,6 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
   // 파일 선택 함수
   Future<void> _pickFile() async {
     try {
-
       await _clearCache(); // 캐시를 비워서 이전 파일을 제거
 
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -117,7 +125,7 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
         String fileContent = await selectedFile.readAsString();
 
         // 고유한 파일 이름을 생성 (예: "originalname-UUID.txt")
-        String newFileName = '${file.name.split('.').first}-${Uuid().v4()}.txt';
+        String newFileName = '${file.name.split('.').first}-$friendId.txt';
 
         // 디바이스의 특정 경로에 복사본을 저장
         Directory appDocDir = await getApplicationDocumentsDirectory(); // 로컬 앱 저장소 경로
@@ -126,7 +134,9 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
 
         // SharedPreferences에 새 경로 저장
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('selectedFilePath', newPath); // 경로 저장
+        await prefs.setString('selectedFilePath_$friendId', newPath);
+        print('저장한 경로 : $newPath');
+        print('저장한 friendId : $friendId');  // friendId 확인
 
         setState(() {
           _chatData = fileContent; // 파일의 내용을 chatData로 설정
@@ -183,11 +193,13 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
       _formKey.currentState!.save();
 
       // 채팅 데이터에서 친구의 메시지만 추출
-      List<String> friendMessages = await _chatService.extractMessagesFromChatData(_chatData, _name);
+      List<String> friendMessages = await _chatService.extractMessagesFromChatData(_filePath, _name);
 
-      // 추출한 메시지 로컬 저장 (친구의 고유 ID로 저장)
-      String friendId = uuid.v4();
-      await _chatService.saveExtractedMessages(friendId, friendMessages);
+      // 저장된 friendId를 SharedPreferences에 저장
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('friendId_${widget.id}', friendId!);
+
+      await _chatService.saveExtractedMessages(friendId!, friendMessages);
 
       Navigator.pop(context, {
         'id': friendId, // 생성된 UUID 전달

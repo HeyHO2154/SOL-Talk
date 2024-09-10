@@ -10,7 +10,12 @@ class ChatService {
     List<String> extractedMessages = [];
 
     try {
+      if (filePath.isEmpty || !(await File(filePath).exists())) {
+        throw 'Invalid file path';
+      }
+
       File file = File(filePath); // 저장된 경로에서 파일 열기
+      print("Extracting from path: $filePath");
       String chatData = await file.readAsString(); // 파일 내용 읽기
 
       // 로그로 전체 chatData 출력
@@ -22,10 +27,8 @@ class ChatService {
       // 친구 이름이 포함된 메시지만 필터링
       for (String line in chatLines) {
         print('현재 처리중인 줄: $line');
-        // friendName 뒤에 ': '가 포함된 줄을 필터링하여 메시지 추출
         if (line.contains('$friendName :')) {
-          // ':' 뒤의 메시지 부분만 추출
-          String message = line.split(':').last.trim();
+          String message = line.split(':').last.trim(); // ':' 뒤의 메시지 부분만 추출
           extractedMessages.add(message);
 
           // 디버깅: 추출된 메시지 로그 출력
@@ -36,11 +39,10 @@ class ChatService {
       print('Error reading chat data from file: $e');
     }
 
-    // 디버깅: 전체 추출된 메시지 리스트 출력
     print('전체 추출된 메시지: $extractedMessages');
-
     return extractedMessages;
   }
+
 
   // 추출한 메시지를 로컬 저장소에 저장하는 함수
   Future<void> saveExtractedMessages(String friendId, List<String> messages) async {

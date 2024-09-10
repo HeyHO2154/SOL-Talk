@@ -94,7 +94,7 @@ class _FriendsEditPageState extends State<FriendsEditPage> {
         String fileContent = await selectedFile.readAsString();
 
         // 고유한 파일 이름을 생성 (예: "originalname-UUID.txt")
-        String newFileName = '${file.name.split('.').first}-${uuid.v4()}.txt';
+        String newFileName = '${file.name.split('.').first}-${widget.id}.txt';
 
         // 디바이스의 특정 경로에 복사본을 저장
         Directory appDocDir = await getApplicationDocumentsDirectory(); // 로컬 앱 저장소 경로
@@ -103,7 +103,8 @@ class _FriendsEditPageState extends State<FriendsEditPage> {
 
         // 선택한 파일 경로를 SharedPreferences에 저장
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('selectedFilePath', newPath); // 경로 저장
+        await prefs.setString('selectedFilePath_${widget.id}', newPath); // 경로 저장
+        //print("############################################################"+newPath);
 
         setState(() {
           _chatData = fileContent; // 파일 내용을 chatData로 설정
@@ -125,19 +126,31 @@ class _FriendsEditPageState extends State<FriendsEditPage> {
     }
   }
 
+  // 저장된 파일 경로 불러오기 (Edit 페이지)
   Future<void> _loadSavedChatData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? savedFilePath = prefs.getString('selectedFilePath');
+
+    // friendId를 기반으로 저장된 파일 경로 불러오기
+    String? savedFilePath = prefs.getString('selectedFilePath_${widget.id}'); // 수정된 key 사용
+
     if (savedFilePath != null && await File(savedFilePath).exists()) {
+      // 비동기 작업을 먼저 수행
+      String fileContent = await File(savedFilePath).readAsString();
+
+      // 이후에 setState()로 UI 업데이트
       setState(() {
         _filePath = savedFilePath;
+        _chatData = fileContent; // 파일 내용을 chatData로 설정
       });
+
+      print('불러온 경로 : $savedFilePath');  // 불러온 경로 로그로 출력
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Saved file not found. Please select a new file.')),
       );
     }
   }
+
 
 
   // 친구 데이터를 로컬 저장소에 저장하는 함수
@@ -154,7 +167,7 @@ class _FriendsEditPageState extends State<FriendsEditPage> {
       _formKey.currentState!.save();
 
       // 채팅 데이터에서 친구의 메시지만 추출
-      List<String> friendMessages = await _chatService.extractMessagesFromChatData(_chatData, _name);
+      List<String> friendMessages = await _chatService.extractMessagesFromChatData(_filePath!, _name);
 
       // 추출한 메시지 로컬 저장 (친구의 고유 ID로 저장)
       String friendId = widget.id; // 고유 ID 필요
