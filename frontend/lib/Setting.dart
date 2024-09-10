@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart'; // 파일 경로를 가져오기 위해 추가
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -6,18 +8,47 @@ class SettingsPage extends StatelessWidget {
   Future<void> _resetData(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    // 친구 목록 삭제
+    // 1. 친구 목록 삭제
     await prefs.remove('friendsList');
 
-    // 채팅방 목록 삭제
+    // 2. 채팅방 목록 삭제
     await prefs.remove('chatRooms');
 
-    // 개별 대화 메시지 삭제 (모든 친구와 관련된 메시지 삭제)
+    // 3. 개별 대화 메시지 삭제 (모든 친구와 관련된 메시지 삭제)
     Set<String> keys = prefs.getKeys();
     for (String key in keys) {
       if (key.startsWith('messages_')) {
         await prefs.remove(key);
       }
+    }
+
+    // 4. 파일 시스템에서 채팅 데이터와 이미지 삭제
+    try {
+      // 앱의 파일 저장 경로를 가져옴
+      Directory appDocDir = await getApplicationDocumentsDirectory();
+      String appDocPath = appDocDir.path;
+
+      // 파일 경로 목록 삭제
+      for (String key in keys) {
+        if (key.startsWith('selectedFilePath_')) {
+          String? filePath = prefs.getString(key);
+          if (filePath != null && await File(filePath).exists()) {
+            await File(filePath).delete(); // 파일 삭제
+          }
+          await prefs.remove(key); // SharedPreferences에서도 제거
+        }
+
+        // 프로필 이미지 삭제
+        if (key.startsWith('friend_') && key.endsWith('_profileImage')) {
+          String? imagePath = prefs.getString(key);
+          if (imagePath != null && await File(imagePath).exists()) {
+            await File(imagePath).delete(); // 프로필 이미지 삭제
+          }
+          await prefs.remove(key); // SharedPreferences에서도 제거
+        }
+      }
+    } catch (e) {
+      print('Error deleting files: $e');
     }
 
     // 초기화 완료 메시지
