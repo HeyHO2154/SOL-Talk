@@ -38,14 +38,6 @@ public class FinancialSummaryController {
     public ResponseEntity<List<CategorySpendingSummary>> getTop5Categories(@RequestParam("userId") int userId) {
         logger.info("getTop5Categories()...userId:{}", userId);
         List<CategorySpendingSummary> list = summaryAnalyzer.getTop5Categories(userId);
-        if (!list.isEmpty()) {
-            for (CategorySpendingSummary categorySpendingSummaryDTO : list) {
-                System.out.println(categorySpendingSummaryDTO.getCategory());
-            }
-        } else {
-            System.out.println("empty");
-        }
-
         return ResponseEntity.ok(list);
     }
 

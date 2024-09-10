@@ -30,8 +30,8 @@ public class FinancialSummaryAnalyzer {
 	
 	private final SpendingSummaryProcessor spendingProcessor;
 	private final SavingsCollector savingsCollector;
-    private FinancialSummaryRepository summaryRepository;
-	private AccountRepository accountRepository;
+    private final FinancialSummaryRepository summaryRepository;
+	private final AccountRepository accountRepository;
     private static final Logger logger = LoggerFactory.getLogger(FinancialSummaryAnalyzer.class.getSimpleName());
 
 	/**
