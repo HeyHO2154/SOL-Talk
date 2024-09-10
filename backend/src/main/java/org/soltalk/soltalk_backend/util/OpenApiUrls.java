@@ -3,12 +3,12 @@ package org.soltalk.soltalk_backend.util;
 public class OpenApiUrls {
 	
 	//// 입출금 URL 공통 
-	public static final String DEMAND_DEPOSIT_URL = "https://finopenapi.ssafy.io/ssafy/api/v1/edu/demandDeposit/";
+	public static final String DEMAND_DEPOSIT_URL = "https://finopenapi.soltalk.io/soltalk/api/v1/edu/demandDeposit/";
 	//// 적금 URL 공통 
-	public static final String SAVINGS_URL = "https://finopenapi.ssafy.io/ssafy/api/v1/edu/savings/";
+	public static final String SAVINGS_URL = "https://finopenapi.soltalk.io/soltalk/api/v1/edu/savings/";
 	
 	//// 1원 인증 URL 공통
-	public static final String ACCOUNT_AUTH_URL = "https://finopenapi.ssafy.io/ssafy/api/v1/edu/accountAuth/";
+	public static final String ACCOUNT_AUTH_URL = "https://finopenapi.soltalk.io/soltalk/api/v1/edu/accountAuth/";
 	
 	//// 입출금 계좌
 	// 예금주 조회
