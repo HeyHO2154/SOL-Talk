@@ -254,8 +254,12 @@ class _FriendsListPageState extends State<FriendsListPage> {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundImage: _profileImagePath != null ? FileImage(File(_profileImagePath!)) : null,
-                    child: _profileImagePath == null ? Text(_name[0]) : null, // 프로필 이미지가 없으면 이니셜 표시
+                    backgroundImage: _profileImagePath != null
+                        ? FileImage(File(_profileImagePath!)) // 프로필 이미지가 있는 경우, 로컬 저장소에서 로드
+                        : null, // 프로필 이미지가 없을 때는 null
+                    child: _profileImagePath == null
+                        ? Text(_name[0], style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)) // 프로필 이미지가 없을 때 이니셜 표시
+                        : null, // 프로필 이미지가 있을 때는 이니셜 대신 이미지 표시
                   ),
                   SizedBox(width: 16),
                   Column(

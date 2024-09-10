@@ -4,7 +4,7 @@ import 'package:path_provider/path_provider.dart'; // 파일 경로를 가져오
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsPage extends StatelessWidget {
-  // 모든 친구와 관련된 데이터를 삭제하는 함수
+  // 모든 친구 및 일정과 관련된 데이터를 삭제하는 함수
   Future<void> _resetData(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -51,9 +51,12 @@ class SettingsPage extends StatelessWidget {
       print('Error deleting files: $e');
     }
 
+    // 5. 일정 관련 데이터 삭제
+    await prefs.remove('events'); // 일정 데이터 삭제
+
     // 초기화 완료 메시지
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('모든 친구와 관련된 데이터가 삭제되었습니다.')),
+      SnackBar(content: Text('모든 친구 및 일정과 관련된 데이터가 삭제되었습니다.')),
     );
   }
 
@@ -72,7 +75,7 @@ class SettingsPage extends StatelessWidget {
               builder: (BuildContext context) {
                 return AlertDialog(
                   title: Text('초기화'),
-                  content: Text('모든 친구와 관련된 데이터를 삭제하시겠습니까?'),
+                  content: Text('모든 친구 및 일정과 관련된 데이터를 삭제하시겠습니까?'),
                   actions: [
                     TextButton(
                       child: Text('취소'),

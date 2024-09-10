@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // SharedPreferences 추가
 import 'dart:io';
 
@@ -63,16 +64,39 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
   }
 
   // 갤러리에서 프로필 사진 선택하는 함수
+  // 갤러리에서 프로필 사진 선택하는 함수
   Future<void> _pickProfileImage() async {
     final ImagePicker _picker = ImagePicker();
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
-      setState(() {
-        _profileImage = File(image.path); // 선택된 이미지 파일을 _profileImage에 저장
-      });
+      Directory appDocDir = await getApplicationDocumentsDirectory();
+      String newFileName = 'user_profile_image.png'; // 사용자 프로필 이미지 고유 이름
+      String newPath = '${appDocDir.path}/$newFileName';
+
+      // 이미지 복사 과정 확인
+      try {
+        File newImage = await File(image.path).copy(newPath); // 이미지를 앱 전용 저장소로 복사
+
+        setState(() {
+          _profileImage = newImage; // 복사된 이미지 파일을 _profileImage에 저장
+          print("이미지 복사 성공: ${newImage.path}");
+        });
+
+        // 프로필 이미지 경로를 SharedPreferences에 저장
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('profileImagePath', newPath); // 이미지 경로를 로컬에 저장
+
+        _loadProfileImage();  // 이미지가 저장된 후 다시 불러와 즉시 반영
+        print("이미지 경로 저장 성공: $newPath");
+      } catch (e) {
+        print("이미지 복사 실패: $e");
+      }
+    } else {
+      print("이미지를 선택하지 않았습니다.");
     }
   }
+
 
   // 수정된 프로필 정보를 로컬 저장소에 저장하는 함수
   Future<void> _saveProfileToLocal() async {
@@ -122,10 +146,12 @@ class _UserProfileEditPageState extends State<UserProfileEditPage> {
                 onTap: _pickProfileImage, // 프로필 사진 선택
                 child: CircleAvatar(
                   radius: 60,
-                  backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
+                  backgroundImage: _profileImage != null
+                      ? FileImage(_profileImage!) // _profileImage가 존재하면 로드
+                      : null, // 프로필 이미지가 없을 때는 null
                   child: _profileImage == null
-                      ? Icon(Icons.camera_alt, size: 40) // 기본 아이콘
-                      : null, // 프로필 이미지가 없을 때 기본 아이콘 표시
+                      ? Icon(Icons.camera_alt, size: 40) // 이미지가 없을 때 기본 아이콘
+                      : null, // 이미지가 있으면 아이콘 대신 이미지를 표시
                 ),
               ),
               SizedBox(height: 16),
