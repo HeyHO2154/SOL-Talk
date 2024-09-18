@@ -79,7 +79,7 @@ class AIThinking {
   }
 
   // Flutter에서 적절한 응답을 선택하는 함수
-  Future<String> getBestResponse(String userMessage, String friendId) async {
+  Future<String?> getBestResponse(String userMessage, String friendId) async {
     // 먼저 메시지를 카테고리로 분류
     Map<String, List<String>> categorizedMessages = await categorizeMessages(friendId);
 
@@ -87,9 +87,9 @@ class AIThinking {
     String selectedCategory = await getCategoryForUserInput(userMessage, categorizedMessages);
 
     // 해당 카테고리의 메시지 중 하나를 랜덤하게 선택
-    List<String> selectedMessages = categorizedMessages[selectedCategory];
+    List<String>? selectedMessages = categorizedMessages[selectedCategory];
     final random = Random();
-    String response = selectedMessages[random.nextInt(selectedMessages.length)];
+    String? response = selectedMessages?[random.nextInt(selectedMessages.length)];
 
     return response;
   }
