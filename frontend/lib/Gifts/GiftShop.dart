@@ -56,8 +56,19 @@ class _GiftShopPageState extends State<GiftShopPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blueGrey[900], // 어두운 배경으로 세련된 느낌
       appBar: AppBar(
-        title: Text('Gift Shop Calendar'),
+        title: Text(
+          '기념일 캘린더',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white, // 흰색 텍스트로 대비
+          ),
+        ),
+        backgroundColor: Colors.transparent, // 투명한 AppBar
+        elevation: 0,
+        centerTitle: true, // 제목을 중앙에 배치
       ),
       body: Column(
         children: [
@@ -79,13 +90,17 @@ class _GiftShopPageState extends State<GiftShopPage> {
             },
             calendarStyle: CalendarStyle(
               todayDecoration: BoxDecoration(
-                color: Colors.blue,
+                color: Colors.cyanAccent.withOpacity(0.5), // 오늘 날짜의 배경색을 더 세련되게 변경
                 shape: BoxShape.circle,
               ),
               selectedDecoration: BoxDecoration(
-                color: Colors.green,
+                color: Colors.lightBlueAccent, // 선택한 날짜의 배경색을 밝은 푸른색으로 변경
                 shape: BoxShape.circle,
               ),
+              outsideDaysVisible: false,
+              weekendTextStyle: TextStyle(color: Colors.redAccent), // 주말 텍스트 색상 변경
+              defaultTextStyle: TextStyle(color: Colors.white), // 일반 텍스트는 흰색
+              selectedTextStyle: TextStyle(color: Colors.white), // 선택된 날짜의 텍스트 색상
             ),
           ),
 
@@ -98,15 +113,20 @@ class _GiftShopPageState extends State<GiftShopPage> {
         onPressed: () {
           _addEventDialog();
         },
-        child: Icon(Icons.add),
+        backgroundColor: Colors.lightBlueAccent, // FAB 색상 변경
+        child: Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  // 일정 목록 출력
   Widget _buildEventList() {
     if (_selectedDay == null) {
-      return Center(child: Text('Please select a day'));
+      return Center(
+        child: Text(
+          'Please select a day',
+          style: TextStyle(color: Colors.white70), // 흰색 계열 텍스트
+        ),
+      );
     }
 
     final events = _events[_selectedDay!] ?? [];
@@ -115,7 +135,7 @@ class _GiftShopPageState extends State<GiftShopPage> {
         child: Center(
           child: Text(
             'No events found',
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18, color: Colors.white70), // 흰색 계열 텍스트
           ),
         ),
       );
@@ -129,8 +149,11 @@ class _GiftShopPageState extends State<GiftShopPage> {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+              color: Colors.blueGrey[800], // 카드 배경색을 어두운 푸른색으로 변경
+              elevation: 5,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -138,24 +161,24 @@ class _GiftShopPageState extends State<GiftShopPage> {
                   children: [
                     Text(
                       event['event'],
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       'Gift: ${event['gift']}',
-                      style: TextStyle(fontSize: 20, color: Colors.blueAccent),
+                      style: TextStyle(fontSize: 18, color: Colors.cyanAccent),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       'Budget: \$${event['budget']}',
-                      style: TextStyle(fontSize: 20, color: Colors.green),
+                      style: TextStyle(fontSize: 18, color: Colors.greenAccent),
                     ),
                     Align(
                       alignment: Alignment.centerRight,
                       child: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
+                        icon: Icon(Icons.delete, color: Colors.redAccent),
                         onPressed: () {
-                          _deleteEvent(index);
+                          //_deleteEvent(index);
                         },
                       ),
                     ),
@@ -169,16 +192,6 @@ class _GiftShopPageState extends State<GiftShopPage> {
     );
   }
 
-  // 일정 삭제 함수
-  void _deleteEvent(int index) {
-    setState(() {
-      _events[_selectedDay!]!.removeAt(index);
-      if (_events[_selectedDay!]!.isEmpty) {
-        _events.remove(_selectedDay!);
-      }
-      _saveEvents();
-    });
-  }
 
   // 일정 추가 다이얼로그
   void _addEventDialog() {
@@ -191,22 +204,34 @@ class _GiftShopPageState extends State<GiftShopPage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Text('Add Event'),
+            backgroundColor: Colors.blueGrey[800], // 다이얼로그 배경을 어두운 푸른색으로
+            title: Text('Add Event', style: TextStyle(color: Colors.white)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: eventController,
-                  decoration: InputDecoration(hintText: 'Enter event name'),
+                  style: TextStyle(color: Colors.white), // 입력 텍스트도 흰색으로
+                  decoration: InputDecoration(
+                    hintText: 'Enter event name',
+                    hintStyle: TextStyle(color: Colors.white54), // 힌트 텍스트 색상
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.1), // 반투명한 배경
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16.0),
                 DropdownButtonFormField<String>(
                   value: _selectedGift,
-                  hint: Text('Select a gift'),
+                  dropdownColor: Colors.blueGrey[800], // 드롭다운 배경색 변경
+                  hint: Text('Select a gift', style: TextStyle(color: Colors.white)),
                   items: _giftItems.map((gift) {
                     return DropdownMenuItem<String>(
                       value: gift,
-                      child: Text(gift),
+                      child: Text(gift, style: TextStyle(color: Colors.white)),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -217,16 +242,21 @@ class _GiftShopPageState extends State<GiftShopPage> {
                   decoration: InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: 'Choose Gift',
+                    labelStyle: TextStyle(color: Colors.white),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.1), // 반투명한 배경
                   ),
                 ),
                 const SizedBox(height: 16.0),
-                Text('Select Maximum Budget: \$${_selectedBudget.toInt()}'),
+                Text('Select Maximum Budget: \$${_selectedBudget.toInt()}', style: TextStyle(color: Colors.white)),
                 Slider(
                   value: _selectedBudget,
                   min: 0,
                   max: 200,
                   divisions: 20,
                   label: '\$${_selectedBudget.toInt()}',
+                  activeColor: Colors.cyanAccent,
+                  inactiveColor: Colors.white30,
                   onChanged: (value) {
                     setState(() {
                       _selectedBudget = value;
@@ -237,11 +267,11 @@ class _GiftShopPageState extends State<GiftShopPage> {
             ),
             actions: [
               TextButton(
-                child: Text('Cancel'),
+                child: Text('Cancel', style: TextStyle(color: Colors.redAccent)),
                 onPressed: () => Navigator.pop(context),
               ),
               TextButton(
-                child: Text('Add'),
+                child: Text('Add', style: TextStyle(color: Colors.lightBlueAccent)),
                 onPressed: () {
                   if (_selectedDay != null &&
                       eventController.text.isNotEmpty &&

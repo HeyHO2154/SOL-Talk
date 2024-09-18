@@ -172,18 +172,27 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        // 뒤로 가기 버튼을 누르면 무조건 채팅방 목록 페이지로 이동
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => NavigationPage(initialIndex: 1), // 채팅방 목록 탭으로 이동
+            builder: (context) => NavigationPage(initialIndex: 1), // 채팅방 목록으로 이동
           ),
         );
         return Future.value(false); // 기본 뒤로 가기 동작 방지
       },
       child: Scaffold(
+        backgroundColor: Colors.blueGrey[900], // 어두운 푸른 계열 배경
         appBar: AppBar(
-          title: Text('${widget.friendName}'),
+          title: Text(
+            '${widget.friendName}',
+            style: TextStyle(
+              color: Colors.white, // 텍스트 색상을 흰색으로 설정
+              fontSize: 20, // 텍스트 크기를 조정 가능
+              fontWeight: FontWeight.bold, // 텍스트 두께 설정
+            ),
+          ),
+          backgroundColor: Colors.transparent, // 투명한 AppBar
+          elevation: 0, // 그림자 제거
           actions: [
             PopupMenuButton<double>(
               onSelected: (newSize) => _changeFontSize(newSize),
@@ -192,7 +201,7 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
                 PopupMenuItem(value: 16.0, child: Text('Medium')),
                 PopupMenuItem(value: 20.0, child: Text('Large')),
               ],
-              icon: Icon(Icons.text_fields),
+              icon: Icon(Icons.text_fields, color: Colors.white),
             ),
           ],
         ),
@@ -207,7 +216,7 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
                   final isMyMessage = message['sender'] == 'me';
 
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0), // 아래쪽에 약간의 패딩 추가
+                    padding: const EdgeInsets.only(bottom: 8.0),
                     child: ListTile(
                       title: Align(
                         alignment: isMyMessage ? Alignment.centerRight : Alignment.centerLeft,
@@ -216,13 +225,13 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
                           children: [
                             if (!isMyMessage)
                               Padding(
-                                padding: const EdgeInsets.only(bottom: 4.0), // 이름과 프로필 사이에 간격 추가
+                                padding: const EdgeInsets.only(bottom: 4.0),
                                 child: Text(
-                                  widget.friendName, // 친구 이름
+                                  widget.friendName,
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.black,
+                                    color: Colors.white, // 밝은 색상으로 텍스트 처리
                                   ),
                                 ),
                               ),
@@ -237,15 +246,18 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
                                 SizedBox(width: 10),
                                 Flexible(
                                   child: Container(
-                                    padding: EdgeInsets.all(10),
+                                    padding: EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: isMyMessage ? Colors.blueAccent : Colors.grey[300],
+                                      color: isMyMessage ? Colors.blueAccent.withOpacity(0.7) : Colors.white.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: isMyMessage ? Colors.blueAccent : Colors.white.withOpacity(0.3),
+                                      ),
                                     ),
                                     child: Text(
                                       message['message'],
                                       style: TextStyle(
-                                        color: isMyMessage ? Colors.white : Colors.black,
+                                        color: isMyMessage ? Colors.white : Colors.white70, // 밝은 텍스트로 대비
                                         fontSize: _fontSize,
                                       ),
                                     ),
@@ -268,15 +280,22 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
                   Expanded(
                     child: TextField(
                       controller: _messageController,
+                      style: TextStyle(color: Colors.white), // 입력 텍스트도 흰색으로
                       decoration: InputDecoration(
                         hintText: 'Type your message...',
-                        border: OutlineInputBorder(),
+                        hintStyle: TextStyle(color: Colors.white54), // 힌트 텍스트를 부드러운 흰색으로
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.1), // 반투명한 배경
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)), // 테두리 색상
+                        ),
                       ),
                     ),
                   ),
                   SizedBox(width: 8),
                   IconButton(
-                    icon: Icon(Icons.send, color: Colors.blue),
+                    icon: Icon(Icons.send, color: Colors.lightBlueAccent),
                     onPressed: _sendMessage,
                   ),
                 ],
@@ -287,4 +306,5 @@ class _TalkRoomPageState extends State<TalkRoomPage> {
       ),
     );
   }
+
 }

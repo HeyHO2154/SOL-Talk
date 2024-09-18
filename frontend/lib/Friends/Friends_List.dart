@@ -26,8 +26,8 @@ class _FriendsListPageState extends State<FriendsListPage> {
   @override
   void initState() {
     super.initState();
-    _loadFriends();  // 친구 목록 불러오기
-    _loadProfile();  // 본인 프로필 정보 불러오기
+    _loadFriends(); // 친구 목록 불러오기
+    _loadProfile(); // 본인 프로필 정보 불러오기
   }
 
   // 친구 목록을 로컬 저장소에서 불러오는 함수
@@ -38,7 +38,8 @@ class _FriendsListPageState extends State<FriendsListPage> {
       List<dynamic> friendsList = json.decode(friendsJson);
       setState(() {
         _friends = friendsList
-            .map((friend) => Map<String, String?>.from(friend as Map)) // String? 타입으로 변환
+            .map((friend) =>
+        Map<String, String?>.from(friend as Map)) // String? 타입으로 변환
             .toList();
       });
     }
@@ -50,7 +51,8 @@ class _FriendsListPageState extends State<FriendsListPage> {
     setState(() {
       _name = prefs.getString('name') ?? _name;
       _jobTitle = prefs.getString('jobTitle') ?? _jobTitle;
-      _profileImagePath = prefs.getString('userProfileImagePath'); // 프로필 이미지 경로 불러오기
+      _profileImagePath =
+          prefs.getString('userProfileImagePath'); // 프로필 이미지 경로 불러오기
     });
   }
 
@@ -62,7 +64,8 @@ class _FriendsListPageState extends State<FriendsListPage> {
     setState(() {
       _name = prefs.getString('name') ?? _name;
       _jobTitle = prefs.getString('jobTitle') ?? _jobTitle;
-      _profileImagePath = prefs.getString('userProfileImagePath'); // 프로필 이미지 경로 불러오기
+      _profileImagePath =
+          prefs.getString('userProfileImagePath'); // 프로필 이미지 경로 불러오기
     });
 
     // 프로필에 해당하는 채팅방의 ID 가져오기
@@ -70,12 +73,14 @@ class _FriendsListPageState extends State<FriendsListPage> {
 
     // 채팅방 리스트에서 내 프로필을 사용하는 방들 업데이트
     if (myId != null) {
-      await _updateChatRoomProfile(myId, _name, _profileImagePath); // ID, 이름, 프로필 이미지 전달
+      await _updateChatRoomProfile(
+          myId, _name, _profileImagePath); // ID, 이름, 프로필 이미지 전달
     }
   }
 
   // 채팅방 리스트에 내 프로필 정보를 반영하는 함수
-  Future<void> _updateChatRoomProfile(String friendId, String updatedName, String? updatedProfileImage) async {
+  Future<void> _updateChatRoomProfile(String friendId, String updatedName,
+      String? updatedProfileImage) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? chatRoomsJson = prefs.getString('chatRooms');
 
@@ -99,7 +104,6 @@ class _FriendsListPageState extends State<FriendsListPage> {
   }
 
 
-
   // 친구 목록을 로컬 저장소에 저장하는 함수
   void _saveFriends() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -112,7 +116,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
     setState(() {
       _friends.add(friend); // 친구 목록에 새로운 친구 추가
     });
-    _saveFriends();  // 추가된 친구 목록 저장
+    _saveFriends(); // 추가된 친구 목록 저장
   }
 
   // 친구를 삭제하고 관련 채팅방, 메시지 데이터를 삭제하는 함수
@@ -140,10 +144,12 @@ class _FriendsListPageState extends State<FriendsListPage> {
 
 
   // 채팅방 추가 함수 (TalkListPage에 채팅방 저장)
-  Future<void> _addChatRoom(String friendId, String friendName, String? profileImagePath) async {
+  Future<void> _addChatRoom(String friendId, String friendName,
+      String? profileImagePath) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? chatRoomsJson = prefs.getString('chatRooms');
-    List<dynamic> chatRoomsList = chatRoomsJson != null ? json.decode(chatRoomsJson) : [];
+    List<dynamic> chatRoomsList = chatRoomsJson != null ? json.decode(
+        chatRoomsJson) : [];
 
     // 고유 ID를 사용하여 채팅방이 이미 존재하는지 확인
     bool roomExists = chatRoomsList.any((room) => room['id'] == friendId);
@@ -164,9 +170,9 @@ class _FriendsListPageState extends State<FriendsListPage> {
   }
 
 
-
   // 친구 클릭 시 TalkRoomPage로 이동 및 채팅방 생성
-  Future<void> _openChatRoom(BuildContext context, String friendId, String friendName, String? profileImagePath) async {
+  Future<void> _openChatRoom(BuildContext context, String friendId,
+      String friendName, String? profileImagePath) async {
     // 기존 채팅방이 있으면 새로운 채팅방을 만들지 않음 (ID를 기반으로)
     await _addChatRoom(friendId, friendName, profileImagePath);
 
@@ -174,7 +180,10 @@ class _FriendsListPageState extends State<FriendsListPage> {
     final lastMessage = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => TalkRoomPage(friendId: friendId, friendName: friendName, profileImagePath: profileImagePath), // ID로 채팅방을 연결
+        builder: (context) =>
+            TalkRoomPage(friendId: friendId,
+                friendName: friendName,
+                profileImagePath: profileImagePath), // ID로 채팅방을 연결
       ),
     );
 
@@ -192,14 +201,14 @@ class _FriendsListPageState extends State<FriendsListPage> {
   }
 
 
-
   // 마지막 메시지 업데이트 함수
   void _updateLastMessage(String friendId, String lastMessage) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? chatRoomsJson = prefs.getString('chatRooms');
     if (chatRoomsJson != null) {
       List<dynamic> chatRoomsList = json.decode(chatRoomsJson);
-      int roomIndex = chatRoomsList.indexWhere((room) => room['id'] == friendId); // ID로 찾음
+      int roomIndex = chatRoomsList.indexWhere((room) =>
+      room['id'] == friendId); // ID로 찾음
 
       if (roomIndex != -1) {
         chatRoomsList[roomIndex]['lastMessage'] = lastMessage;
@@ -213,13 +222,23 @@ class _FriendsListPageState extends State<FriendsListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blueGrey[900], // 어두운 푸른 계열 배경
       appBar: AppBar(
-        title: Text('Friends List'),
+        title: Text(
+          '친구 목록',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.white, // 흰색 텍스트로 푸른 배경과 대비
+          ),
+        ),
+        backgroundColor: Colors.transparent, // 투명한 AppBar
+        elevation: 0, // 그림자 제거
+        centerTitle: true, // 제목을 중앙에 배치
         actions: [
           IconButton(
-            icon: Icon(Icons.add),
+            icon: Icon(Icons.person_add, color: Colors.white), // 흰색 아이콘
             onPressed: () async {
-              // 친구 추가 페이지로 이동 후, 추가된 친구 정보 받기
               final newFriend = await Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -238,52 +257,68 @@ class _FriendsListPageState extends State<FriendsListPage> {
           // 본인 프로필
           InkWell(
             onTap: () async {
-              // UserProfilePage로 이동 후, 수정된 프로필 정보 받기
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => UserProfilePage(), // UserProfilePage로 이동
+                  builder: (context) => UserProfilePage(),
                 ),
               );
-              // 수정된 프로필 정보를 동기화
               _updateProfileFromPreferences();
             },
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+            child: Container(
+              padding: EdgeInsets.all(20),
+              margin: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.2), // 글래스모피즘 효과를 위한 반투명한 푸른색 배경
+                borderRadius: BorderRadius.circular(20), // 둥근 모서리
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3), // 테두리 반투명한 흰색
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1), // 부드러운 그림자
+                    blurRadius: 30,
+                    offset: Offset(0, 10),
+                  ),
+                ],
+              ),
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 30,
+                    radius: 40,
                     backgroundImage: _profileImagePath != null
-                        ? FileImage(File(_profileImagePath!))  // 로컬 저장소에서 이미지 로드
-                        : null,  // 이미지가 없을 때는 null
+                        ? FileImage(File(_profileImagePath!))
+                        : null,
                     child: _profileImagePath == null
                         ? Text(
-                      _name[0],  // 이름의 첫 글자를 표시
+                      _name[0],
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: 28,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     )
-                        : null,  // 이미지가 있으면 텍스트 대신 이미지를 표시
+                        : null,
+                    backgroundColor: Colors.lightBlueAccent.withOpacity(0.3), // 반투명한 푸른색 배경
                   ),
                   SizedBox(width: 16),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _name, // 본인 이름
+                        _name,
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                       SizedBox(height: 4),
                       Text(
-                        _jobTitle, // 본인 직업 또는 상태 메시지
+                        _jobTitle,
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey[600],
+                          color: Colors.white70, // 부드러운 흰색
                         ),
                       ),
                     ],
@@ -292,135 +327,131 @@ class _FriendsListPageState extends State<FriendsListPage> {
               ),
             ),
           ),
-          Divider(),
           // 친구 목록
           Expanded(
             child: ListView.builder(
               itemCount: _friends.length,
               itemBuilder: (context, index) {
                 final friend = _friends[index];
-                return ListTile(
-                  onTap: () {
-                    // 친구 이름을 클릭했을 때도 채팅방으로 이동
-                    _openChatRoom(
-                      context,
-                      friend['id']!, // 친구 고유 ID 전달
-                      friend['name']!, // 친구 이름
-                      friend['profileImage'] != null ? friend['profileImage'] : null, // 친구 프로필 이미지 경로
-                    );
-                  },
-                  leading: GestureDetector(
-                    onTap: () async {
-                      final updatedFriend = await Navigator.push(
+                return Container(
+                  margin: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blueAccent.withOpacity(0.2), // 반투명한 푸른 배경
+                    borderRadius: BorderRadius.circular(20), // 둥근 모서리
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3), // 테두리 반투명
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 20,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: ListTile(
+                    onTap: () {
+                      _openChatRoom(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) => FriendsEditPage(
-                            id: _friends[index]['id']!, // 고유 ID 유지
-                            name: _friends[index]['name']!,
-                            chatData: _friends[index]['chatData']!,
-                            profileImagePath: _friends[index]['profileImage'],
-                          ),
-                        ),
+                        friend['id']!,
+                        friend['name']!,
+                        friend['profileImage'],
                       );
-
-                      if (updatedFriend != null) {
-                        setState(() {
-                          _friends[index] = {
-                            'id': _friends[index]['id'], // 유지되는 고유 ID
-                            'name': updatedFriend['name'],
-                            'chatData': updatedFriend['chatData'],
-                            'profileImage': updatedFriend['profileImage'],
-                          };
-                        });
-                        _saveFriends(); // 수정된 데이터를 로컬 저장소에 저장
-
-                        // 채팅방 정보도 함께 업데이트
-                        _updateChatRoomProfile(
-                            _friends[index]['id']!,      // 친구 ID
-                            updatedFriend['name'],       // 새 이름
-                            updatedFriend['profileImage'] // 새 프로필 이미지
-                        );
-                      }
                     },
-                    child: CircleAvatar(
-                      radius: 25,
+                    leading: CircleAvatar(
+                      radius: 30,
                       backgroundImage: friend['profileImage'] != null
                           ? FileImage(File(friend['profileImage']!))
                           : null,
                       child: friend['profileImage'] == null
-                          ? Text(friend['name']![0])
-                          : null, // 친구 이름의 첫 글자로 기본 프로필 표시
+                          ? Text(
+                        friend['name']![0],
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                          : null,
+                      backgroundColor: Colors.cyanAccent.withOpacity(0.3), // 반투명한 푸른색 배경
                     ),
-                  ),
-                  title: Text(friend['name']!),
-                  trailing: Wrap(
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.black), // 수정 버튼
-                        onPressed: () async {
-                          final updatedFriend = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => FriendsEditPage(
-                                id: friend['id']!, // 고유 ID 유지
-                                name: friend['name']!,
-                                chatData: friend['chatData']!,
-                                profileImagePath: friend['profileImage'],
+                    title: Text(
+                      friend['name']!,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    trailing: Wrap(
+                      spacing: 12,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.edit, color: Colors.white70),
+                          onPressed: () async {
+                            final updatedFriend = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FriendsEditPage(
+                                  id: friend['id']!,
+                                  name: friend['name']!,
+                                  chatData: friend['chatData']!,
+                                  profileImagePath: friend['profileImage'],
+                                ),
                               ),
-                            ),
-                          );
-
-                          if (updatedFriend != null) {
-                            setState(() {
-                              _friends[index] = {
-                                'id': _friends[index]['id'], // 유지되는 고유 ID
-                                'name': updatedFriend['name'],
-                                'chatData': updatedFriend['chatData'],
-                                'profileImage': updatedFriend['profileImage'],
-                              };
-                            });
-                            _saveFriends(); // 수정된 데이터를 로컬 저장소에 저장
-
-                            // 채팅방 정보도 함께 업데이트
-                            _updateChatRoomProfile(
-                              _friends[index]['id']!, // 친구 ID
-                              updatedFriend['name'], // 새 이름
-                              updatedFriend['profileImage'], // 새 프로필 이미지
                             );
-                          }
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          // 친구 삭제 확인 대화 상자 표시
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: Text('Delete Friend'),
-                                content: Text('Are you sure you want to delete this friend and related chat room and data?'),
-                                actions: [
-                                  TextButton(
-                                    child: Text('Cancel'),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                  TextButton(
-                                    child: Text('Delete'),
-                                    onPressed: () {
-                                      _deleteFriendAndChatRoom(friend['name']!, index); // 친구 및 모든 관련 데이터 삭제
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ],
+
+                            if (updatedFriend != null) {
+                              setState(() {
+                                _friends[index] = {
+                                  'id': _friends[index]['id'],
+                                  'name': updatedFriend['name'],
+                                  'chatData': updatedFriend['chatData'],
+                                  'profileImage': updatedFriend['profileImage'],
+                                };
+                              });
+                              _saveFriends();
+                              _updateChatRoomProfile(
+                                _friends[index]['id']!,
+                                updatedFriend['name'],
+                                updatedFriend['profileImage'],
                               );
-                            },
-                          );
-                        },
-                      ),
-                    ],
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete, color: Colors.lightBlueAccent),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  backgroundColor: Colors.blueGrey[900],
+                                  title: Text('친구 삭제', style: TextStyle(color: Colors.white)),
+                                  content: Text('정말로 이 친구를 삭제하시겠습니까?', style: TextStyle(color: Colors.white70)),
+                                  actions: [
+                                    TextButton(
+                                      child: Text('취소', style: TextStyle(color: Colors.white70)),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                    TextButton(
+                                      child: Text('삭제', style: TextStyle(color: Colors.lightBlueAccent)),
+                                      onPressed: () {
+                                        _deleteFriendAndChatRoom(friend['id']!, index);
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -430,4 +461,7 @@ class _FriendsListPageState extends State<FriendsListPage> {
       ),
     );
   }
+
+
+
 }

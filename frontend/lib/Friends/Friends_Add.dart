@@ -51,7 +51,9 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
         if (status.isGranted) {
           _pickFile();
         } else {
-          if (await Permission.storage.request().isGranted) {
+          if (await Permission.storage
+              .request()
+              .isGranted) {
             _pickFile();
           } else {
             _showPermissionDialog(); // 권한 부여가 실패하면 다이얼로그 표시
@@ -62,7 +64,9 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
         if (await Permission.mediaLibrary.isGranted) {
           _pickFile(); // 권한이 있으면 바로 파일 탐색창 열기
         } else {
-          if (await Permission.mediaLibrary.request().isGranted) {
+          if (await Permission.mediaLibrary
+              .request()
+              .isGranted) {
             _pickFile(); // 권한 부여 후 파일 탐색창 열기
           } else {
             _showPermissionDialog(); // 권한 부여가 실패하면 다이얼로그 표시
@@ -125,7 +129,9 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
         String fileContent = await selectedFile.readAsString();
 
         // 고유한 파일 이름을 생성 (예: "originalname-UUID.txt")
-        String newFileName = '${file.name.split('.').first}-$friendId.txt';
+        String newFileName = '${file.name
+            .split('.')
+            .first}-$friendId.txt';
 
         // 디바이스의 특정 경로에 복사본을 저장
         Directory appDocDir = await getApplicationDocumentsDirectory(); // 로컬 앱 저장소 경로
@@ -136,7 +142,7 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('selectedFilePath_$friendId', newPath);
         print('저장한 경로 : $newPath');
-        print('저장한 friendId : $friendId');  // friendId 확인
+        print('저장한 friendId : $friendId'); // friendId 확인
 
         setState(() {
           _chatData = fileContent; // 파일의 내용을 chatData로 설정
@@ -159,31 +165,31 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
   }
 
 
-
   // 권한이 없을 때 권한 설정으로 이동하는 다이얼로그
   void _showPermissionDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: Text('Storage Permission'),
-        content: Text(
-            'Storage permission is required to pick a file. Please enable it in the app settings.'),
-        actions: <Widget>[
-          TextButton(
-            child: Text('Open Settings'),
-            onPressed: () {
-              openAppSettings(); // 앱 설정 화면으로 이동하여 권한 허용을 요청
-              Navigator.of(context).pop();
-            },
+      builder: (BuildContext context) =>
+          AlertDialog(
+            title: Text('Storage Permission'),
+            content: Text(
+                'Storage permission is required to pick a file. Please enable it in the app settings.'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Open Settings'),
+                onPressed: () {
+                  openAppSettings(); // 앱 설정 화면으로 이동하여 권한 허용을 요청
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text('Cancel'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
           ),
-          TextButton(
-            child: Text('Cancel'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      ),
     );
   }
 
@@ -193,7 +199,8 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
       _formKey.currentState!.save();
 
       // 채팅 데이터에서 친구의 메시지만 추출
-      List<String> friendMessages = await _chatService.extractMessagesFromChatData(_filePath, _name);
+      List<String> friendMessages = await _chatService
+          .extractMessagesFromChatData(_filePath, _name);
 
       // 저장된 friendId를 SharedPreferences에 저장
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -213,31 +220,53 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100], // 밝은 배경색으로 설정
       appBar: AppBar(
-        title: Text('Add Friend'),
+        title: Text(
+          '친구 추가',
+          style: TextStyle(
+            color: Colors.white, // 흰색 텍스트
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.lightBlueAccent, // 밝은 파스텔 톤의 배경색
+        elevation: 0,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // 프로필 사진 추가
               GestureDetector(
                 onTap: _pickProfileImage, // 프로필 이미지 선택
                 child: CircleAvatar(
-                  radius: 40,
-                  backgroundImage:
-                  _profileImage != null ? FileImage(_profileImage!) : null,
+                  radius: 50,
+                  backgroundImage: _profileImage != null ? FileImage(
+                      _profileImage!) : null,
                   child: _profileImage == null
-                      ? Icon(Icons.add_a_photo)
+                      ? Icon(Icons.add_a_photo, size: 40, color: Colors.white)
                       : null, // 기본 프로필 이미지가 없으면 아이콘 표시
+                  backgroundColor: Colors.lightBlueAccent.withOpacity(
+                      0.6), // 프로필 사진 배경 색상
                 ),
               ),
-              SizedBox(height: 16),
-              // 친구 이름 입력
+              const SizedBox(height: 24),
+
+              // 친구 이름 입력 필드
               TextFormField(
-                decoration: InputDecoration(labelText: 'Friend Name'),
+                decoration: InputDecoration(
+                  labelText: '친구이름(카톡명 그대로)',
+                  labelStyle: TextStyle(color: Colors.grey[700]),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: Colors.lightBlueAccent),
+                  ),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a name';
@@ -248,13 +277,24 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
                   _name = value!;
                 },
               ),
-              SizedBox(height: 16),
-              // 친구 대화 데이터 입력
+              const SizedBox(height: 24),
+
+              // 친구 대화 데이터 입력 필드
               TextFormField(
-                decoration: InputDecoration(labelText: 'Chat Data'),
+                decoration: InputDecoration(
+                  labelText: '추출된 대화 내역',
+                  labelStyle: TextStyle(color: Colors.grey[700]),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: Colors.lightBlueAccent),
+                  ),
+                ),
                 readOnly: true, // 직접 입력하지 못하도록 설정
                 controller: TextEditingController(
-                    text: _filePath.isNotEmpty ? 'File: $_filePath' : ''),
+                  text: _filePath.isNotEmpty ? 'File: $_filePath' : '',
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please select a chat data file';
@@ -262,15 +302,35 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _checkAndRequestStoragePermission, // 권한 확인 및 파일 선택 버튼
-                child: Text('Select Chat Data File'),
+              const SizedBox(height: 24),
+
+              // 파일 선택 버튼
+              ElevatedButton.icon(
+                onPressed: _checkAndRequestStoragePermission,
+                // 권한 확인 및 파일 선택 버튼
+                icon: Icon(Icons.attach_file, color: Colors.white),
+                label: Text('카카오톡 대화내역 불러오기'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.lightBlueAccent, // 버튼 색상
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                ),
               ),
-              SizedBox(height: 32),
+              const SizedBox(height: 32),
+
+              // 친구 추가 버튼
               ElevatedButton(
                 onPressed: _saveFriend,
-                child: Text('Save'),
+                child: Text('저장'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.lightBlueAccent, // 버튼 색상
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 48),
+                ),
               ),
             ],
           ),
@@ -278,4 +338,5 @@ class _FriendsAddPageState extends State<FriendsAddPage> {
       ),
     );
   }
+
 }
